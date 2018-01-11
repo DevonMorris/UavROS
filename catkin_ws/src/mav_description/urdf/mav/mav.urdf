@@ -14,7 +14,7 @@
       <geometry>
         <mesh filename="package://mav_description/meshes/mav.stl" scale=".05 .05 .05"/>
       </geometry>
-      <origin xyz="0.0 -.15 0.0"/>
+      <origin rpy="3.141592 0.0 -1.5708" xyz="0.0 0.0 0.0"/>
       <material name="white"/>
     </visual>
   </link>

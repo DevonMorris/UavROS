@@ -1,0 +1,9 @@
+publish_interval: 100
+settings:
+  /mav/d/data: {is_repeat: false, max: 0.0, min: -20.0}
+  /mav/e/data: {is_repeat: false, max: 20.0, min: -20.0}
+  /mav/n/data: {is_repeat: false, max: 20.0, min: -20.0}
+  /mav/phi/data: {is_repeat: false, max: 3.14, min: -3.14}
+  /mav/psi/data: {is_repeat: false, max: 3.14, min: -3.14}
+  /mav/theta/data: {is_repeat: false, max: 3.14, min: -3.14}
+texts: [/mav/d/data, /mav/n/data, /mav/e/data, /mav/phi/data, /mav/theta/data, /mav/psi/data]

@@ -1,0 +1,15 @@
+<launch>
+
+  <arg name="model" default="$(find mav_description)/urdf/mav/mav.urdf"/>
+  <arg name="rvizconfig" default="$(find mav_description)/rviz/mav.rviz"/>
+  <arg name="sliderconfig" default="$(find mav_description)/rviz/rqt_ez.yaml"/>
+  <param name="robot_description" command="$(find xacro)/xacro.py $(arg model)"/>
+
+  <node name="tf_frames" pkg="mav" type="tf_frames"/>
+  <node name="tf_viewer" pkg="mav_description" type="tf_viewer"/>
+
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)" required="true" />
+  <node name="sliders" pkg="rqt_ez_publisher" type="rqt_ez_publisher" args="--slider-file $(arg sliderconfig)" required="true"/>
+</launch>
