@@ -10,10 +10,16 @@ int main(int argc, char** argv){
   tf::TransformBroadcaster broadcaster;
 
   while(n.ok()){
+  
     broadcaster.sendTransform(
       tf::StampedTransform(
-        tf::Transform(tf::Quaternion(0, 0, 0, 1), tf::Vector3(0.1, 0.0, 0.2)),
-        ros::Time::now(),"world", "base_link"));
+        tf::Transform(tf::Quaternion(0, M_PI, 0), tf::Vector3(0.0, 0.0, 0.0)),
+        ros::Time::now(),"world", "world_ned"));
+
+    broadcaster.sendTransform(
+      tf::StampedTransform(
+        tf::Transform(tf::Quaternion(0, 0, 0, 1), tf::Vector3(0.0, 0.0, -1.0)),
+        ros::Time::now(),"world_ned", "base_link"));
     r.sleep();
   }
 }
