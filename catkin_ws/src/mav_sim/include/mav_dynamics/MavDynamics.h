@@ -10,6 +10,7 @@
 #include <geometry_msgs/Wrench.h>
 
 #include <Eigen/Dense>
+#include <Eigen/Geometry>
 
 typedef Eigen::Matrix<double, 12, 1> MavState;
 
@@ -29,7 +30,8 @@ private:
   void input_cb_(const geometry_msgs::WrenchConstPtr& msg);
 
   // RK4 and dynamics
-  void RK4(double dt, MavState);
+  void RK4(double dt);
+  MavState dynamics(MavState state);
 
   // tf broadcaster
   tf::TransformBroadcaster tf_br_;

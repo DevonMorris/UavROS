@@ -29,6 +29,8 @@ namespace mav_dynamics
     double dt = (now - ros::Time::now()).toSec();
     now = ros::Time::now();
 
+    RK4(dt);
+
     // create transform
     tf::StampedTransform transform;
 
@@ -45,9 +47,38 @@ namespace mav_dynamics
     tf_br_.sendTransform(tf::StampedTransform(transform, now, "world_ned", "base_link"));
   }
 
-  void RK4(Eigen::Vector3d& vec, std::function<Eigen::Vector3d()> func)
+  void MavDynamics::RK4(double dt)
   {
-    Eigen::Vector3d k1 = func
+    MavState k_1 = dynamics(mav_state);
+    MavState k_2 = dynamics(mav_state + dt/2*k_1);
+    MavState k_3 = dynamics(mav_state + dt/2*k_2);
+    MavState k_4 = dynamics(mav_state + dt*k_3);
+    mav_state += dt/6*(k_1 + 2*k_2 + 2*k_3 + k_4);
+  }
+
+  MavState dynamics(MavState state)
+  {
+    MavState state_dot = Eigen::MatrixXd::Zero(12);
+
+    //unpack state
+    Eigen::Vector3d pos;
+    Eigen::Vector3d att;
+    Eigen::Vector3d vel;
+    Eigen::Vector3d omega;
+
+    pos << state(0), state(1), state(2);
+    att << state(3), state(4), state(5);
+    att << state(6), state(7), state(8);
+    att << state(9), state(10), state(11);
+
+    double c_psi = cos(state(5) * 0.5);
+    double s_psi = sin(state(5) * 0.5);
+    double c_phi = cos(state(3) * 0.5);
+    double s_phi = sin(state(3) * 0.5);
+    double c_th = cos(state(4) * 0.5);
+    double s_th = sin(state(4) * 0.5);
+
+    return state_dot;
   }
 
 }
