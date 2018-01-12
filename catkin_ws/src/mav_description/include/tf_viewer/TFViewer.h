@@ -6,7 +6,6 @@
 #include <tf/transform_broadcaster.h>
 
 #include <std_msgs/Float32.h>
-#include <geometry_msgs/Pose.h>
 
 namespace tf_viewer
 {

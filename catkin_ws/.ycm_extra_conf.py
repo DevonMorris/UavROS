@@ -70,7 +70,7 @@ default_flags = [
     # specify a "-std=<something>".
     # For a C project, you would set this to something like 'c99' instead of
     # 'c++11'.
-    '-std=c++03',
+    '-std=c++11',
     # ...and the same thing goes for the magic -x option which specifies the
     # language that the files to be compiled are written in. This is mostly
     # relevant for c++ headers.
@@ -79,6 +79,9 @@ default_flags = [
     'c++',
     '-I',
     '.',
+    '-I/usr/lib/',
+    '-I/usr/include/',
+    '-I/usr/include/eigen3/'
 
     # include third party libraries
     # '-isystem',

@@ -24,7 +24,7 @@ namespace tf_viewer
     tf::StampedTransform transform;
 
     /*
-     * Transform from world (assumed to be nwu) to world_ned
+     * Transform from world_ned to body
      */
 
     transform.setIdentity();
