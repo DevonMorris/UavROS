@@ -3,7 +3,7 @@ m: 13.5 # mass in kg
 Jx: 0.8244 # moment of inertia about x
 Jy: 1.135 # moment of intertia about y
 Jz: 1.759 # moment of interia about z
-Jxz: 0.1204
+Jxz: .1204
 
 S: 0.55 
 b: 2.8956

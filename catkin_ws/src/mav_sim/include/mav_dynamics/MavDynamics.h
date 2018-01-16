@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cmath>
+
 #include <ros/ros.h>
 
 #include <tf/tf.h>
@@ -12,10 +14,21 @@
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 
-typedef Eigen::Matrix<double, 12, 1> MavState;
+typedef Eigen::Matrix<double, 12, 1> Vector12d;
 
 namespace mav_dynamics
 {
+
+typedef struct
+{
+  double m; // mass
+
+  // moments of interia
+  double Jx; 
+  double Jy;
+  double Jz;
+  double Jxz;
+} parameters_mav;
 
 class MavDynamics
 {
@@ -31,17 +44,23 @@ private:
 
   // RK4 and dynamics
   void RK4(double dt);
-  MavState dynamics(MavState state);
+  Vector12d dynamics(Vector12d state);
 
   // tf broadcaster
   tf::TransformBroadcaster tf_br_;
 
   // state of the mav
-  MavState mav_state;
+  Vector12d mav_state;
 
   // inputs to the mav
   Eigen::Vector3d force;
   Eigen::Vector3d torque;
+
+  // inertia matrix
+  Eigen::Matrix3d J;
+
+  // params
+  parameters_mav params_;
   
 public:
   MavDynamics();

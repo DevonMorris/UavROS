@@ -8,11 +8,27 @@ namespace mav_dynamics
       ros::NodeHandle nh_private("~");
       now = ros::Time::now();
 
+      // grab params and check if they exist
+      if (!nh_.getParam("/mav/m", params_.m) ||
+          !nh_.getParam("/mav/Jx", params_.Jx) ||
+          !nh_.getParam("/mav/Jy", params_.Jy) ||
+          !nh_.getParam("/mav/Jz", params_.Jz) ||
+          !nh_.getParam("/mav/Jxz", params_.Jxz))
+      {
+        ROS_ERROR("[MavDynamics] mass and moment params not found on rosparam server");
+        ros::shutdown();
+      }
+
       // Initialize state to 0
-      mav_state = Eigen::MatrixXd::Zero(12);
+      mav_state = Eigen::MatrixXd::Zero(12,1);
       // Initialize forces/torques to 0
       force = Eigen::Vector3d::Zero();
       torque = Eigen::Vector3d::Zero();
+
+      // Create inertia matrix
+      J << params_.Jx, 0, -params_.Jxz,
+           0,     params_.Jy,        0,
+           -params_.Jxz, 0, params_.Jz;
 
       // publishers and subscribes
       input_sub_ = nh_.subscribe("/mav/input", 5, &MavDynamics::input_cb_, this);
@@ -49,16 +65,22 @@ namespace mav_dynamics
 
   void MavDynamics::RK4(double dt)
   {
-    MavState k_1 = dynamics(mav_state);
-    MavState k_2 = dynamics(mav_state + dt/2*k_1);
-    MavState k_3 = dynamics(mav_state + dt/2*k_2);
-    MavState k_4 = dynamics(mav_state + dt*k_3);
-    mav_state += dt/6*(k_1 + 2*k_2 + 2*k_3 + k_4);
+    Vector12d k_1 = dynamics(mav_state);
+    Vector12d k_2 = dynamics(mav_state + (dt/2.0)*k_1);
+    Vector12d k_3 = dynamics(mav_state + (dt/2.0)*k_2);
+    Vector12d k_4 = dynamics(mav_state + dt*k_3);
+    mav_state += (dt/6.0)*(k_1 + 2.0*k_2 + 2.0*k_3 + k_4);
   }
 
-  MavState dynamics(MavState state)
+  Vector12d MavDynamics::dynamics(Vector12d state)
   {
-    MavState state_dot = Eigen::MatrixXd::Zero(12);
+    Vector12d state_dot = Eigen::MatrixXd::Zero(12,1);
+
+    //state derivatives
+    Eigen::Vector3d dpos;
+    Eigen::Vector3d datt;
+    Eigen::Vector3d dvel;
+    Eigen::Vector3d domega;
 
     //unpack state
     Eigen::Vector3d pos;
@@ -68,15 +90,28 @@ namespace mav_dynamics
 
     pos << state(0), state(1), state(2);
     att << state(3), state(4), state(5);
-    att << state(6), state(7), state(8);
-    att << state(9), state(10), state(11);
+    vel << state(6), state(7), state(8);
+    omega << state(9), state(10), state(11);
 
-    double c_psi = cos(state(5) * 0.5);
-    double s_psi = sin(state(5) * 0.5);
-    double c_phi = cos(state(3) * 0.5);
-    double s_phi = sin(state(3) * 0.5);
-    double c_th = cos(state(4) * 0.5);
-    double s_th = sin(state(4) * 0.5);
+    // Transformation to convert body into vehicle (i.e. NED)
+    Eigen::Quaternion<double> R_vb = (Eigen::AngleAxisd(state(3), Eigen::Vector3d::UnitX()) *
+                           Eigen::AngleAxisd(state(4), Eigen::Vector3d::UnitY()) *
+                           Eigen::AngleAxisd(state(5), Eigen::Vector3d::UnitZ())); 
+
+    // Make matrix for datt
+    Eigen::Matrix3d AttD;
+    AttD << 1.0, std::sin(att(0))*std::tan(att(1)), std::cos(att(0))*std::tan(att(1)),
+            0.0, std::cos(att(0)),                  -std::sin(att(0)),
+            0.0, std::sin(att(0))/std::cos(att(1)), std::cos(att(0))/std::cos(att(1));
+
+
+    // Calculate derivatives
+    dpos = R_vb*vel;
+    dvel = -omega.cross(vel) + force/params_.m;
+    datt = AttD*omega;
+    domega = J.inverse()*(-omega.cross(J*omega)+torque);
+
+    state_dot << dpos, datt, dvel, domega;
 
     return state_dot;
   }
