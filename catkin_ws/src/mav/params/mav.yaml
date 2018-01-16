@@ -1,0 +1,17 @@
+m: 13.5 # mass in kg
+
+Jx: 0.8244 # moment of inertia about x
+Jy: 1.135 # moment of intertia about y
+Jz: 1.759 # moment of interia about z
+Jxz: .1204
+
+S: 0.55 
+b: 2.8956
+c: 0.18994
+Sprop: 0.2027
+rho: 1.2682
+
+k_motor: 80
+k_Tp: 0
+k_Omega: 0
+e: 0.9
