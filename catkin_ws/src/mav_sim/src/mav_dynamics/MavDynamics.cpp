@@ -55,12 +55,25 @@ namespace mav_dynamics
      */
 
     transform.setIdentity();
-    tf::Quaternion qNED2BODY; qNED2BODY.setRPY(mav_state(3), mav_state(4), mav_state(5));
+    tf::Quaternion qNED2BODY; qNED2BODY.setRPY(0.0, 0.0, 0.0);
     tf::Vector3 tNED2BODY; tNED2BODY.setValue(mav_state(0), mav_state(1), mav_state(2));
 
     transform.setRotation(qNED2BODY);
     transform.setOrigin(tNED2BODY);
-    tf_br_.sendTransform(tf::StampedTransform(transform, now, "world_ned", "base_link"));
+    tf_br_.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world_ned", "vehicle"));
+
+    tNED2BODY.setValue(0., 0., 0.);
+    qNED2BODY.setRPY(0., 0., mav_state(5));
+    transform.setRotation(qNED2BODY);
+    transform.setOrigin(tNED2BODY);
+    tf_br_.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "vehicle", "vehicle1"));
+
+    tNED2BODY.setValue(0., 0., 0.);
+    qNED2BODY.setRPY(mav_state(3), mav_state(4), 0.);
+    transform.setRotation(qNED2BODY);
+    transform.setOrigin(tNED2BODY);
+    tf_br_.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "vehicle1", "base_link"));
+
   }
 
   void MavDynamics::RK4(double dt)
