@@ -1,4 +1,5 @@
 #include <mav_dynamics/MavDynamics.h>
+#include <iostream>
 
 namespace mav_dynamics
 {
@@ -106,16 +107,31 @@ namespace mav_dynamics
     vel << state(6), state(7), state(8);
     omega << state(9), state(10), state(11);
 
+    double cphi = std::cos(att(0));
+    double sphi = std::sin(att(0));
+    double ctheta = std::cos(att(1));
+    double stheta = std::sin(att(1));
+    double ttheta = std::tan(att(1));
+    double cpsi = std::cos(att(2));
+    double spsi = std::sin(att(2));
+
+
     // Transformation to convert body into vehicle (i.e. NED)
-    Eigen::Quaternion<double> R_vb = (Eigen::AngleAxisd(state(3), Eigen::Vector3d::UnitX()) *
-                           Eigen::AngleAxisd(state(4), Eigen::Vector3d::UnitY()) *
-                           Eigen::AngleAxisd(state(5), Eigen::Vector3d::UnitZ())); 
+    // note: vehicle to body is given, then we take the inverse (active vs passive)
+    Eigen::Quaternion<double> R_vb = Eigen::AngleAxisd(att(0), Eigen::Vector3d::UnitX()) *
+                           Eigen::AngleAxisd(att(1), Eigen::Vector3d::UnitY()) *
+                           Eigen::AngleAxisd(att(2), Eigen::Vector3d::UnitZ()); 
+    //Eigen::Matrix3d R_vb;
+    //R_vb << ctheta*cpsi, sphi*stheta*cpsi - cphi*spsi, cphi*stheta*cpsi + sphi*spsi,
+    //        ctheta*spsi, sphi*stheta*spsi + cphi*cpsi, cphi*stheta*spsi - sphi*cpsi,
+    //        -stheta,     sphi*ctheta,     cphi*ctheta;
 
     // Make matrix for datt
     Eigen::Matrix3d AttD;
-    AttD << 1.0, std::sin(att(0))*std::tan(att(1)), std::cos(att(0))*std::tan(att(1)),
-            0.0, std::cos(att(0)),                  -std::sin(att(0)),
-            0.0, std::sin(att(0))/std::cos(att(1)), std::cos(att(0))/std::cos(att(1));
+
+    AttD << 1.0, sphi*ttheta, cphi*ttheta,
+            0.0, cphi, -sphi,
+            0.0, sphi/ctheta, cphi/ctheta;
 
 
     // Calculate derivatives
