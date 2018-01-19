@@ -28,12 +28,24 @@ namespace tf_viewer
      */
 
     transform.setIdentity();
-    tf::Quaternion qNED2BODY; qNED2BODY.setRPY(phi_, theta_, psi_);
     tf::Vector3 tNED2BODY; tNED2BODY.setValue(n_, e_, d_);
+    tf::Quaternion qNED2BODY; qNED2BODY.setRPY(0., 0., 0.);
 
     transform.setRotation(qNED2BODY);
     transform.setOrigin(tNED2BODY);
-    tf_br_.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world_ned", "base_link"));
+    tf_br_.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world_ned", "vehicle"));
+
+    tNED2BODY.setValue(0., 0., 0.);
+    qNED2BODY.setRPY(0., 0., psi_);
+    transform.setRotation(qNED2BODY);
+    transform.setOrigin(tNED2BODY);
+    tf_br_.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "vehicle", "vehicle1"));
+
+    tNED2BODY.setValue(0., 0., 0.);
+    qNED2BODY.setRPY(phi_, theta_, 0.);
+    transform.setRotation(qNED2BODY);
+    transform.setOrigin(tNED2BODY);
+    tf_br_.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "vehicle1", "base_link"));
 
   }
 

@@ -4,10 +4,13 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
+        - /Global Options1
+        - /Grid1
         - /RobotModel1
-        - /RobotModel1/Status1
         - /TF1
         - /TF1/Frames1
+        - /TF1/Frames1/base_link1/Relative Position1
+        - /TF1/Frames1/vehicle1
       Splitter Ratio: 0.5
     Tree Height: 566
   - Class: rviz/Selection
@@ -33,7 +36,7 @@ Visualization Manager:
   Class: ""
   Displays:
     - Alpha: 0.5
-      Cell Size: 1
+      Cell Size: 10
       Class: rviz/Grid
       Color: 160; 160; 164
       Enabled: true
@@ -47,7 +50,7 @@ Visualization Manager:
         Y: 0
         Z: 0
       Plane: XY
-      Plane Cell Count: 10
+      Plane Cell Count: 100
       Reference Frame: world
       Value: true
     - Alpha: 0.800000012
@@ -78,6 +81,10 @@ Visualization Manager:
         All Enabled: false
         base_link:
           Value: true
+        vehicle:
+          Value: false
+        vehicle1:
+          Value: false
         world:
           Value: false
         world_ned:
@@ -90,15 +97,17 @@ Visualization Manager:
       Tree:
         world:
           world_ned:
-            base_link:
-              {}
+            vehicle:
+              vehicle1:
+                base_link:
+                  {}
       Update Interval: 0
       Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
     Default Light: true
-    Fixed Frame: world
+    Fixed Frame: vehicle1
     Frame Rate: 30
   Name: root
   Tools:
@@ -119,7 +128,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 2.10845542
+      Distance: 3.55315804
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
@@ -131,13 +140,13 @@ Visualization Manager:
         Z: 0
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
-      Invert Z Axis: false
+      Invert Z Axis: true
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.15539749
+      Pitch: 0.430397689
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 2.53358269
+      Yaw: 3.1835885
     Saved: ~
 Window Geometry:
   Displays:
@@ -156,4 +165,4 @@ Window Geometry:
     collapsed: false
   Width: 1216
   X: 1977
-  Y: 156
+  Y: 128
