@@ -1,9 +1,18 @@
-m: 13.5 # mass in kg
+# Zagi Params
+m: 1.56 # mass in kg
 
-Jx: 0.8244 # moment of inertia about x
-Jy: 1.135 # moment of intertia about y
-Jz: 1.759 # moment of interia about z
-Jxz: .1204
+Jx: 0.1147 # moment of inertia about x
+Jy: 0.0576 # moment of intertia about y
+Jz: 0.1712 # moment of interia about z
+Jxz: .0015
+
+# Aerosonde Params
+#m: 13.5 # mass in kg
+
+#Jx: 0.8244 # moment of inertia about x
+#Jy: 1.135 # moment of intertia about y
+#Jz: 1.759 # moment of interia about z
+#Jxz: .1204
 
 S: 0.55 
 b: 2.8956
