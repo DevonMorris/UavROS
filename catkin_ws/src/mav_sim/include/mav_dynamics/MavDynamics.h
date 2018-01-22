@@ -9,7 +9,7 @@
 
 #include <vector>
 
-#include <mav_msgs/Command.h>
+#include <geometry_msgs/Wrench.h>
 
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
@@ -96,7 +96,7 @@ private:
   void initParams();
 
   // callbacks for subs
-  void ctrl_cb_(const mav_msgs::CommandConstPtr& msg);
+  void ctrl_cb_(const geometry_msgs::WrenchConstPtr& msg);
 
   // RK4 and dynamics
   void RK4(double dt);
@@ -113,6 +113,10 @@ private:
 
   // inertia matrix
   Eigen::Matrix3d J;
+
+  // force and torques
+  Eigen::Vector3d force;
+  Eigen::Vector3d torque;
 
   // params
   parameters_mav params_;

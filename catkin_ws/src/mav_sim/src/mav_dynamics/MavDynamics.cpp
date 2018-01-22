@@ -79,12 +79,10 @@ namespace mav_dynamics
       }
   }
 
-  void MavDynamics::ctrl_cb_(const mav_msgs::CommandConstPtr& msg)
+  void MavDynamics::ctrl_cb_(const geometry_msgs::WrenchConstPtr& msg)
   {
-    ctrls.dela = msg->dela;
-    ctrls.dele = msg->dele;
-    ctrls.delr = msg->delr;
-    ctrls.thrust = msg->thrust;
+    force << msg->force.x, msg->force.y, msg->force.z;
+    torque << msg->torque.x, msg->torque.y, msg->torque.z;
   }
 
   void MavDynamics::tick()
