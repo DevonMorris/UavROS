@@ -9,7 +9,7 @@
 
 #include <vector>
 
-#include <geometry_msgs/Wrench.h>
+#include <mav_msgs/Command.h>
 
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
@@ -28,7 +28,60 @@ typedef struct
   double Jy;
   double Jz;
   double Jxz;
+
+  double S;
+  double b;
+  double c;
+  double Sprop;
+  double rho;
+  double k_motor;
+  double k_Tp;
+  double k_Omega;
+  double e;
+
+  // Longitudinal Coeffs
+  double C_L0;
+  double C_D0;
+  double C_m0;
+  double C_Lalpha;
+  double C_Dalpha;
+  double C_malpha;
+  double C_Lq;
+  double C_Dq;
+  double C_mq;
+  double C_Ldele;
+  double C_Ddele;
+  double C_mdele;
+  double C_prop;
+  double M;
+  double alpha0;
+  double eps;
+  double C_Dp;
+
+  // Lateral Coeffs
+  double C_Y0;
+  double C_l0;
+  double C_n0;
+  double C_Ybeta;
+  double C_lbeta;
+  double C_nbeta;
+  double C_Yp;
+  double C_lp;
+  double C_np;
+  double C_Yr;
+  double C_lr;
+  double C_nr;
+  double C_Ydela;
+  double C_ldela;
+  double C_ndela;
 } parameters_mav;
+
+typedef struct{
+  double dela;
+  double dele;
+  double delr;
+  double thrust;
+} controls;
 
 class MavDynamics
 {
@@ -39,8 +92,11 @@ private:
 
   ros::Time now;
 
+  // init for params
+  void initParams();
+
   // callbacks for subs
-  void input_cb_(const geometry_msgs::WrenchConstPtr& msg);
+  void ctrl_cb_(const mav_msgs::CommandConstPtr& msg);
 
   // RK4 and dynamics
   void RK4(double dt);
@@ -53,8 +109,7 @@ private:
   Vector12d mav_state;
 
   // inputs to the mav
-  Eigen::Vector3d force;
-  Eigen::Vector3d torque;
+  controls ctrls;
 
   // inertia matrix
   Eigen::Matrix3d J;
