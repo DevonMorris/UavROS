@@ -19,6 +19,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   std_msgs
   tf
+  tf_conversions
 )
 
 ## System dependencies are found with CMake's conventions
@@ -144,12 +145,14 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}_mav_dynamics src/mav_dynamics/dynamics_node.cpp src/mav_dynamics/MavDynamics.cpp)
+add_executable(${PROJECT_NAME}_mav_wrench src/mav_wrench/wrench_node.cpp src/mav_wrench/MavWrench.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
 ## e.g. "rosrun someones_pkg node" instead of "rosrun someones_pkg someones_pkg_node"
 set_target_properties(${PROJECT_NAME}_mav_dynamics PROPERTIES OUTPUT_NAME mav_dynamics PREFIX "")
+set_target_properties(${PROJECT_NAME}_mav_wrench PROPERTIES OUTPUT_NAME mav_wrench PREFIX "")
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -157,6 +160,7 @@ set_target_properties(${PROJECT_NAME}_mav_dynamics PROPERTIES OUTPUT_NAME mav_dy
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_mav_dynamics ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_mav_wrench ${catkin_LIBRARIES})
 
 #############
 ## Install ##

@@ -8,6 +8,7 @@ MavParams::MavParams(ros::NodeHandle& nh_)
 {
     // grab params and check if they exist
     if (!nh_.getParam("/mav/m", m) ||
+        !nh_.getParam("/mav/g", g) ||
         !nh_.getParam("/mav/Jx", Jx) ||
         !nh_.getParam("/mav/Jy", Jy) ||
         !nh_.getParam("/mav/Jz", Jz) ||

@@ -9,6 +9,7 @@ class MavParams
     // constructor
     MavParams(ros::NodeHandle& nh_);
 
+    double g; // acceleration due to gravity
     double m; // mass
 
     // moments of interia
