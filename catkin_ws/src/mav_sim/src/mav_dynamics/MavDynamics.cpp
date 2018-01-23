@@ -1,15 +1,13 @@
-#include <mav_dynamics/MavDynamics.h>
-#include <iostream>
+#include "mav_dynamics/MavDynamics.h"
 
 namespace mav_dynamics
 {
   MavDynamics::MavDynamics() :
-    nh_(ros::NodeHandle())
+    nh_(ros::NodeHandle()),
+    params_(nh_)
   {
       ros::NodeHandle nh_private("~");
       now = ros::Time::now();
-
-      initParams();
 
       // Initialize state to 0
       mav_state = Eigen::MatrixXd::Zero(12,1);
@@ -23,60 +21,7 @@ namespace mav_dynamics
            -params_.Jxz, 0, params_.Jz;
 
       // publishers and subscribes
-      input_sub_ = nh_.subscribe("/mav/input", 5, &MavDynamics::ctrl_cb_, this);
-  }
-
-  void MavDynamics::initParams()
-  {
-      // grab params and check if they exist
-      if (!nh_.getParam("/mav/m", params_.m) ||
-          !nh_.getParam("/mav/Jx", params_.Jx) ||
-          !nh_.getParam("/mav/Jy", params_.Jy) ||
-          !nh_.getParam("/mav/Jz", params_.Jz) ||
-          !nh_.getParam("/mav/Jxz", params_.Jxz) ||
-          !nh_.getParam("/mav/S", params_.S) ||
-          !nh_.getParam("/mav/b", params_.b) ||
-          !nh_.getParam("/mav/c", params_.c) ||
-          !nh_.getParam("/mav/Sprop", params_.Sprop) ||
-          !nh_.getParam("/mav/rho", params_.rho) ||
-          !nh_.getParam("/mav/k_motor", params_.k_motor) ||
-          !nh_.getParam("/mav/k_Tp", params_.k_Tp) ||
-          !nh_.getParam("/mav/k_Omega", params_.k_Omega) ||
-          !nh_.getParam("/mav/e", params_.e) ||
-          !nh_.getParam("/mav/C_L0", params_.C_L0) ||
-          !nh_.getParam("/mav/C_D0", params_.C_D0) ||
-          !nh_.getParam("/mav/C_m0", params_.C_m0) ||
-          !nh_.getParam("/mav/C_Lalpha", params_.C_Lalpha) ||
-          !nh_.getParam("/mav/C_Dalpha", params_.C_Dalpha) ||
-          !nh_.getParam("/mav/C_malpha", params_.C_malpha) ||
-          !nh_.getParam("/mav/C_Lq", params_.C_Lq) ||
-          !nh_.getParam("/mav/C_Dq", params_.C_Dq) ||
-          !nh_.getParam("/mav/C_mq", params_.C_mq) ||
-          !nh_.getParam("/mav/C_Ldele", params_.C_Ldele) ||
-          !nh_.getParam("/mav/C_Ddele", params_.C_Ddele) ||
-          !nh_.getParam("/mav/C_mdele", params_.C_mdele) ||
-          !nh_.getParam("/mav/C_prop", params_.C_prop) ||
-          !nh_.getParam("/mav/M", params_.M) ||
-          !nh_.getParam("/mav/alpha0", params_.alpha0) ||
-          !nh_.getParam("/mav/eps", params_.eps) ||
-          !nh_.getParam("/mav/C_Dp", params_.C_Dp) ||
-          !nh_.getParam("/mav/C_Y0", params_.C_Y0) ||
-          !nh_.getParam("/mav/C_l0", params_.C_l0) ||
-          !nh_.getParam("/mav/C_n0", params_.C_n0) ||
-          !nh_.getParam("/mav/C_Ybeta", params_.C_lbeta) ||
-          !nh_.getParam("/mav/C_nbeta", params_.C_nbeta) ||
-          !nh_.getParam("/mav/C_Yp", params_.C_Yp) ||
-          !nh_.getParam("/mav/C_lp", params_.C_lp) ||
-          !nh_.getParam("/mav/C_np", params_.C_np) ||
-          !nh_.getParam("/mav/C_Yr", params_.C_Yr) ||
-          !nh_.getParam("/mav/C_lr", params_.C_lr) ||
-          !nh_.getParam("/mav/C_nr", params_.C_nr) ||
-          !nh_.getParam("/mav/C_Ydela", params_.C_Ydela) ||
-          !nh_.getParam("/mav/C_ldela", params_.C_ldela) ||
-          !nh_.getParam("/mav/C_ndela", params_.C_ndela)) {
-        ROS_ERROR("[MavDynamics] params not found on rosparam server");
-        ros::shutdown();
-      }
+      input_sub_ = nh_.subscribe("/mav/wrench", 5, &MavDynamics::ctrl_cb_, this);
   }
 
   void MavDynamics::ctrl_cb_(const geometry_msgs::WrenchConstPtr& msg)

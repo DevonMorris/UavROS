@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   eigen_conversions
   geometry_msgs
   mav_msgs
+  mav
   roscpp
   rospy
   sensor_msgs
@@ -113,8 +114,8 @@ find_package(Eigen3 REQUIRED)
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES mav_sim
-#  CATKIN_DEPENDS dynamic_reconfigure eigen_conversions geometry_msgs roscpp rospy sensor_msgs std_msgs
-#  DEPENDS system_lib
+  CATKIN_DEPENDS dynamic_reconfigure eigen_conversions geometry_msgs roscpp rospy sensor_msgs std_msgs mav
+  DEPENDS system_lib
 )
 
 ###########

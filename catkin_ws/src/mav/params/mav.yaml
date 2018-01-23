@@ -4,7 +4,7 @@ m: 1.56 # mass in kg
 Jx: 0.1147 # moment of inertia about x
 Jy: 0.0576 # moment of intertia about y
 Jz: 0.1712 # moment of interia about z
-Jxz: .0015
+Jxz: 0.0015
 
 S: 0.2589 # Wing surface area
 b: 1.4224
@@ -12,8 +12,8 @@ c: 0.3302 # Chord
 Sprop: 0.0314
 rho: 1.2682 # air density
 k_motor: 20
-k_Tp: 0
-k_Omega: 0
+k_Tp: 0.0
+k_Omega: 0.0
 e: 0.9 # oswald efficiency factor
 
 # Longitudinal Coeffs
@@ -24,7 +24,7 @@ C_Lalpha: 3.5016
 C_Dalpha: 0.2108
 C_malpha: -0.5675
 C_Lq: 2.8932
-C_Dq: 0
+C_Dq: 0.0
 C_mq: -1.3990
 C_Ldele: 0.2724
 C_Ddele: 0.3042
@@ -41,7 +41,7 @@ C_l0: 0.0
 C_n0: 0.0
 C_Ybeta: -0.07359
 C_lbeta: -0.02854
-C_nbeta: -.00040
+C_nbeta: -0.00040
 C_Yp: 0.0
 C_lp: -0.3209
 C_np: -0.01297
