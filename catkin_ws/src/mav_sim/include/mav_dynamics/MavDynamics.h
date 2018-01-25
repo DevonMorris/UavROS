@@ -10,6 +10,7 @@
 #include <vector>
 
 #include <geometry_msgs/Wrench.h>
+#include <geometry_msgs/Twist.h>
 
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
@@ -27,6 +28,7 @@ private:
   // Ros node handles, publishers and subscribers
   ros::NodeHandle nh_;
   ros::Subscriber input_sub_;
+  ros::Publisher twist_pub_;
 
   ros::Time now;
 
