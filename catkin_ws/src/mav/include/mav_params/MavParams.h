@@ -63,6 +63,9 @@ class MavParams
     double C_Ydela;
     double C_ldela;
     double C_ndela;
+    double C_Ydelr;
+    double C_ldelr;
+    double C_ndelr;
 };
 
 } 

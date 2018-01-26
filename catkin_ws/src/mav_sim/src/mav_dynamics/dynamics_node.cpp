@@ -9,6 +9,9 @@ int main(int argc, char **argv){
   mav_dynamics::MavDynamics dynam;
 
   ros::Rate r(100);
+  ros::spinOnce();
+  r.sleep();
+
   while(ros::ok()){
     dynam.tick();
     ros::spinOnce();

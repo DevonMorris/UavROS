@@ -1,73 +1,115 @@
 # Zagi Params
+#g: 9.81 # acceleration due to gravity
+#m: 1.56 # mass in kg
+#
+#Jx: 0.1147 # moment of inertia about x
+#Jy: 0.0576 # moment of intertia about y
+#Jz: 0.1712 # moment of interia about z
+#Jxz: 0.0015
+#
+#S: 0.2589 # Wing surface area
+#b: 1.4224
+#c: 0.3302 # Chord
+#Sprop: 0.0314
+#rho: 1.2682 # air density
+#k_motor: 20
+#k_Tp: 0.0
+#k_Omega: 0.0
+#e: 0.9 # oswald efficiency factor
+#
+## Longitudinal Coeffs
+#C_L0: 0.09167
+#C_D0: 0.01631
+#C_m0: -0.02338
+#C_Lalpha: 3.5016
+#C_Dalpha: 0.2108
+#C_malpha: -0.5675
+#C_Lq: 2.8932
+#C_Dq: 0.0
+#C_mq: -1.3990
+#C_Ldele: 0.2724
+#C_Ddele: 0.3042
+#C_mdele: -0.3254
+#C_prop: 1.0
+#M: 50
+#alpha0: 0.4712
+#eps: 0.1592
+#C_Dp: 0.0254
+#
+## Lateral Coeffs
+#C_Y0: 0.0
+#C_l0: 0.0
+#C_n0: 0.0
+#C_Ybeta: -0.07359
+#C_lbeta: -0.02854
+#C_nbeta: -0.00040
+#C_Yp: 0.0
+#C_lp: -0.3209
+#C_np: -0.01297
+#C_Yr: 0.0
+#C_lr: 0.03066
+#C_nr: -0.000434
+#C_Ydela: 0.0
+#C_ldela: 0.1682
+#C_ndela: -0.00328
+#C_Ydelr: 0.0
+#C_ldelr: 0.0
+#C_ndelr: 0.0
+
+# Aerosonde Params
 g: 9.81 # acceleration due to gravity
-m: 1.56 # mass in kg
+m: 13.5 # mass in kg
 
-Jx: 0.1147 # moment of inertia about x
-Jy: 0.0576 # moment of intertia about y
-Jz: 0.1712 # moment of interia about z
-Jxz: 0.0015
+Jx: 0.8244 # moment of inertia about x
+Jy: 1.135 # moment of intertia about y
+Jz: 1.759 # moment of interia about z
+Jxz: 0.1204
 
-S: 0.2589 # Wing surface area
-b: 1.4224
-c: 0.3302 # Chord
-Sprop: 0.0314
+S: 0.55 # Wing surface area
+b: 2.8956
+c: 0.18994 # Chord
+Sprop: 0.2027
 rho: 1.2682 # air density
-k_motor: 20
+k_motor: 80
 k_Tp: 0.0
 k_Omega: 0.0
 e: 0.9 # oswald efficiency factor
 
 # Longitudinal Coeffs
-C_L0: 0.09167
-C_D0: 0.01631
+C_L0: 0.28
+C_D0: 0.03
 C_m0: -0.02338
-C_Lalpha: 3.5016
-C_Dalpha: 0.2108
-C_malpha: -0.5675
-C_Lq: 2.8932
+C_Lalpha: 3.45
+C_Dalpha: 0.3
+C_malpha: -0.38
+C_Lq: 0.0
 C_Dq: 0.0
-C_mq: -1.3990
-C_Ldele: 0.2724
-C_Ddele: 0.3042
-C_mdele: -0.3254
+C_mq: -3.6
+C_Ldele: -0.36
+C_Ddele: 0.0
+C_mdele: -0.5
 C_prop: 1.0
 M: 50
 alpha0: 0.4712
 eps: 0.1592
-C_Dp: 0.0254
+C_Dp: 0.0437
 
 # Lateral Coeffs
 C_Y0: 0.0
 C_l0: 0.0
 C_n0: 0.0
-C_Ybeta: -0.07359
-C_lbeta: -0.02854
-C_nbeta: -0.00040
+C_Ybeta: -0.98
+C_lbeta: -0.12
+C_nbeta: 0.25
 C_Yp: 0.0
-C_lp: -0.3209
-C_np: -0.01297
+C_lp: -0.26
+C_np: 0.022
 C_Yr: 0.0
-C_lr: 0.03066
-C_nr: -0.000434
+C_lr: 0.14
+C_nr: -0.35
 C_Ydela: 0.0
-C_ldela: 0.1682
-C_ndela: -0.00328
-
-# Aerosonde Params
-#m: 13.5 # mass in kg
-
-#Jx: 0.8244 # moment of inertia about x
-#Jy: 1.135 # moment of intertia about y
-#Jz: 1.759 # moment of interia about z
-#Jxz: .1204
-
-#S: 0.55 
-#b: 2.8956
-#c: 0.18994
-#Sprop: 0.2027
-#rho: 1.2682
-#
-#k_motor: 80
-#k_Tp: 0
-#k_Omega: 0
-#e: 0.9
+C_ldela: 0.08
+C_ndela: 0.06
+C_Ydelr: -0.17
+C_ldelr: 0.105
+C_ndelr: -0.032

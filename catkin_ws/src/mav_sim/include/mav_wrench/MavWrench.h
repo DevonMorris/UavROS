@@ -22,7 +22,7 @@ namespace mav_wrench
     double dela;
     double dele;
     double delr;
-    double thrust;
+    double delt;
   } Command;
 
   class MavWrench

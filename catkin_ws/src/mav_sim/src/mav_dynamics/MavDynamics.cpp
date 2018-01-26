@@ -55,6 +55,7 @@ namespace mav_dynamics
     // transform vehicle frame to vehicle1 frame
     tNED2BODY.setValue(0., 0., 0.);
     qNED2BODY.setRPY(0., 0., mav_state(5));
+    transform.setIdentity();
     transform.setRotation(qNED2BODY);
     transform.setOrigin(tNED2BODY);
     tf_br_.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "vehicle", "vehicle1"));
@@ -62,6 +63,7 @@ namespace mav_dynamics
     // transform vehicle1 frame to body
     tNED2BODY.setValue(0., 0., 0.);
     qNED2BODY.setRPY(mav_state(3), mav_state(4), 0.);
+    transform.setIdentity();
     transform.setRotation(qNED2BODY);
     transform.setOrigin(tNED2BODY);
     tf_br_.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "vehicle1", "base_link"));
@@ -80,6 +82,25 @@ namespace mav_dynamics
     Vector12d k_3 = dynamics(mav_state + (dt/2.0)*k_2);
     Vector12d k_4 = dynamics(mav_state + dt*k_3);
     mav_state += (dt/6.0)*(k_1 + 2.0*k_2 + 2.0*k_3 + k_4);
+
+    if (mav_state(2) > 0)
+    {
+      mav_state(2) = 0.0;
+      mav_state(3) = 0.0;
+      Eigen::Vector3d vel;
+      vel << mav_state(6), mav_state(7), mav_state(8);
+      Eigen::Quaternion<double> R_vb (Eigen::AngleAxisd(mav_state(3), Eigen::Vector3d::UnitX()) *
+                           Eigen::AngleAxisd(mav_state(4), Eigen::Vector3d::UnitY()) *
+                           Eigen::AngleAxisd(mav_state(5), Eigen::Vector3d::UnitZ())); 
+      // Put it in vehicle frame
+      vel = R_vb*vel;
+      if (vel(2) > 0);
+      {
+        vel(2) = -0.3*vel(2);
+      }
+      vel = R_vb.inverse()*vel;
+      mav_state(6) = vel(0); mav_state(7) = vel(1); mav_state(8) = vel(2);
+    }
   }
 
   Vector12d MavDynamics::dynamics(Vector12d state)
@@ -103,6 +124,8 @@ namespace mav_dynamics
     vel << state(6), state(7), state(8);
     omega << state(9), state(10), state(11);
 
+    //ROS_ERROR_STREAM(vel);
+
     double cphi = std::cos(att(0));
     double sphi = std::sin(att(0));
     double ctheta = std::cos(att(1));
@@ -115,9 +138,9 @@ namespace mav_dynamics
     // Transformation to convert body into vehicle (i.e. NED)
     // note: vehicle to body is given, then we take the inverse, but Eigen uses active rotations
     // instead of passive rotations so we take the inverse again
-    Eigen::Quaternion<double> R_vb = Eigen::AngleAxisd(att(0), Eigen::Vector3d::UnitX()) *
+    Eigen::Quaternion<double> R_vb (Eigen::AngleAxisd(att(0), Eigen::Vector3d::UnitX()) *
                            Eigen::AngleAxisd(att(1), Eigen::Vector3d::UnitY()) *
-                           Eigen::AngleAxisd(att(2), Eigen::Vector3d::UnitZ()); 
+                           Eigen::AngleAxisd(att(2), Eigen::Vector3d::UnitZ())); 
     //Eigen::Matrix3d R_vb;
     //R_vb << ctheta*cpsi, sphi*stheta*cpsi - cphi*spsi, cphi*stheta*cpsi + sphi*spsi,
     //        ctheta*spsi, sphi*stheta*spsi + cphi*cpsi, cphi*stheta*spsi - sphi*cpsi,
