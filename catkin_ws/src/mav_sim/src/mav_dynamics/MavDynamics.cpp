@@ -11,15 +11,17 @@ namespace mav_dynamics
     twist_pub_ = nh_.advertise<geometry_msgs::Twist>("/mav/twist", 5);
 
     // Initialize state to 0
-    mav_state = Eigen::MatrixXd::Zero(12,1);
+    mav_state = Eigen::MatrixXf::Zero(12,1);
     // Initialize forces/torques to 0
-    force = Eigen::Vector3d::Zero();
-    torque = Eigen::Vector3d::Zero();
+    force = Eigen::Vector3f::Zero();
+    torque = Eigen::Vector3f::Zero();
 
     // Create inertia matrix
     J << params_.Jx, 0, -params_.Jxz,
          0,     params_.Jy,        0,
          -params_.Jxz, 0, params_.Jz;
+
+    J_inv = J.inverse();
 
     // publishers and subscribes
     input_sub_ = nh_.subscribe("/mav/wrench", 5, &MavDynamics::ctrl_cb_, this);
@@ -34,7 +36,7 @@ namespace mav_dynamics
   void MavDynamics::tick()
   {
     // find timestep
-    double dt = (now - ros::Time::now()).toSec();
+    double dt = (ros::Time::now() - now).toSec();
     now = ros::Time::now();
 
     // Integrate the dynamics
@@ -77,47 +79,47 @@ namespace mav_dynamics
 
   void MavDynamics::RK4(double dt)
   {
-    Vector12d k_1 = dynamics(mav_state);
-    Vector12d k_2 = dynamics(mav_state + (dt/2.0)*k_1);
-    Vector12d k_3 = dynamics(mav_state + (dt/2.0)*k_2);
-    Vector12d k_4 = dynamics(mav_state + dt*k_3);
+    Vector12f k_1 = dynamics(mav_state);
+    Vector12f k_2 = dynamics(mav_state + (dt/2.0)*k_1);
+    Vector12f k_3 = dynamics(mav_state + (dt/2.0)*k_2);
+    Vector12f k_4 = dynamics(mav_state + dt*k_3);
     mav_state += (dt/6.0)*(k_1 + 2.0*k_2 + 2.0*k_3 + k_4);
 
     if (mav_state(2) > 0)
     {
-      mav_state(2) = 0.0;
-      mav_state(3) = 0.0;
-      Eigen::Vector3d vel;
+      Eigen::Vector3f vel;
       vel << mav_state(6), mav_state(7), mav_state(8);
-      Eigen::Quaternion<double> R_vb (Eigen::AngleAxisd(mav_state(3), Eigen::Vector3d::UnitX()) *
-                           Eigen::AngleAxisd(mav_state(4), Eigen::Vector3d::UnitY()) *
-                           Eigen::AngleAxisd(mav_state(5), Eigen::Vector3d::UnitZ())); 
+      Eigen::Quaternion<float> R_vb (Eigen::AngleAxisf(mav_state(3), Eigen::Vector3f::UnitX()) *
+                           Eigen::AngleAxisf(mav_state(4), Eigen::Vector3f::UnitY()) *
+                           Eigen::AngleAxisf(mav_state(5), Eigen::Vector3f::UnitZ())); 
       // Put it in vehicle frame
       vel = R_vb*vel;
       if (vel(2) > 0);
       {
-        vel(2) = -0.3*vel(2);
+        vel(2) = -0.6*vel(2);
       }
       vel = R_vb.inverse()*vel;
       mav_state(6) = vel(0); mav_state(7) = vel(1); mav_state(8) = vel(2);
+
+      mav_state(2) = 0.0;
     }
   }
 
-  Vector12d MavDynamics::dynamics(Vector12d state)
+  Vector12f MavDynamics::dynamics(Vector12f state)
   {
-    Vector12d state_dot = Eigen::MatrixXd::Zero(12,1);
+    Vector12f state_dot = Eigen::MatrixXf::Zero(12,1);
 
     //state derivatives
-    Eigen::Vector3d dpos;
-    Eigen::Vector3d datt;
-    Eigen::Vector3d dvel;
-    Eigen::Vector3d domega;
+    Eigen::Vector3f dpos;
+    Eigen::Vector3f datt;
+    Eigen::Vector3f dvel;
+    Eigen::Vector3f domega;
 
     //unpack state
-    Eigen::Vector3d pos;
-    Eigen::Vector3d att;
-    Eigen::Vector3d vel;
-    Eigen::Vector3d omega;
+    Eigen::Vector3f pos;
+    Eigen::Vector3f att;
+    Eigen::Vector3f vel;
+    Eigen::Vector3f omega;
 
     pos << state(0), state(1), state(2);
     att << state(3), state(4), state(5);
@@ -126,28 +128,24 @@ namespace mav_dynamics
 
     //ROS_ERROR_STREAM(vel);
 
-    double cphi = std::cos(att(0));
-    double sphi = std::sin(att(0));
-    double ctheta = std::cos(att(1));
-    double stheta = std::sin(att(1));
-    double ttheta = std::tan(att(1));
-    double cpsi = std::cos(att(2));
-    double spsi = std::sin(att(2));
+    float cphi = std::cos(att(0));
+    float sphi = std::sin(att(0));
+    float ctheta = std::cos(att(1));
+    float stheta = std::sin(att(1));
+    float ttheta = std::tan(att(1));
+    float cpsi = std::cos(att(2));
+    float spsi = std::sin(att(2));
 
 
     // Transformation to convert body into vehicle (i.e. NED)
     // note: vehicle to body is given, then we take the inverse, but Eigen uses active rotations
     // instead of passive rotations so we take the inverse again
-    Eigen::Quaternion<double> R_vb (Eigen::AngleAxisd(att(0), Eigen::Vector3d::UnitX()) *
-                           Eigen::AngleAxisd(att(1), Eigen::Vector3d::UnitY()) *
-                           Eigen::AngleAxisd(att(2), Eigen::Vector3d::UnitZ())); 
-    //Eigen::Matrix3d R_vb;
-    //R_vb << ctheta*cpsi, sphi*stheta*cpsi - cphi*spsi, cphi*stheta*cpsi + sphi*spsi,
-    //        ctheta*spsi, sphi*stheta*spsi + cphi*cpsi, cphi*stheta*spsi - sphi*cpsi,
-    //        -stheta,     sphi*ctheta,     cphi*ctheta;
+    Eigen::Quaternion<float> R_vb (Eigen::AngleAxisf(att(0), Eigen::Vector3f::UnitX()) *
+                           Eigen::AngleAxisf(att(1), Eigen::Vector3f::UnitY()) *
+                           Eigen::AngleAxisf(att(2), Eigen::Vector3f::UnitZ())); 
 
     // Make matrix for datt
-    Eigen::Matrix3d AttD;
+    Eigen::Matrix3f AttD;
 
     AttD << 1.0, sphi*ttheta, cphi*ttheta,
             0.0, cphi, -sphi,
@@ -158,7 +156,7 @@ namespace mav_dynamics
     dpos = R_vb*vel;
     dvel = -omega.cross(vel) + force/params_.m;
     datt = AttD*omega;
-    domega = J.inverse()*(-omega.cross(J*omega)+torque);
+    domega = J_inv*(-omega.cross(J*omega)+torque);
 
     state_dot << dpos, datt, dvel, domega;
 

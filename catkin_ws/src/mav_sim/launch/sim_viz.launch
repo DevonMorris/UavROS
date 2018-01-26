@@ -9,7 +9,7 @@
 
   <node name="tf_frames" pkg="mav" type="tf_frames" />
   <node name="mav_dynamics" pkg="mav_sim" type="mav_dynamics" ns="mav"/>
-  <node name="mav_wrench" pkg="mav_sim" type="mav_wrench" ns="mav"/>
+  <node name="mav_wrench" pkg="mav_sim" type="mav_wrench" ns="mav" output="screen"/>
 
   <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />

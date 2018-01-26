@@ -146,6 +146,7 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}_mav_dynamics src/mav_dynamics/dynamics_node.cpp src/mav_dynamics/MavDynamics.cpp)
 add_executable(${PROJECT_NAME}_mav_wrench src/mav_wrench/wrench_node.cpp src/mav_wrench/MavWrench.cpp)
+add_executable(${PROJECT_NAME}_mav_wind src/mav_wind/wind_node.cpp src/mav_wind/MavWind.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -153,6 +154,7 @@ add_executable(${PROJECT_NAME}_mav_wrench src/mav_wrench/wrench_node.cpp src/mav
 ## e.g. "rosrun someones_pkg node" instead of "rosrun someones_pkg someones_pkg_node"
 set_target_properties(${PROJECT_NAME}_mav_dynamics PROPERTIES OUTPUT_NAME mav_dynamics PREFIX "")
 set_target_properties(${PROJECT_NAME}_mav_wrench PROPERTIES OUTPUT_NAME mav_wrench PREFIX "")
+set_target_properties(${PROJECT_NAME}_mav_wind PROPERTIES OUTPUT_NAME mav_wind PREFIX "")
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -161,6 +163,7 @@ set_target_properties(${PROJECT_NAME}_mav_wrench PROPERTIES OUTPUT_NAME mav_wren
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_mav_dynamics ${catkin_LIBRARIES})
 target_link_libraries(${PROJECT_NAME}_mav_wrench ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_mav_wind ${catkin_LIBRARIES})
 
 #############
 ## Install ##

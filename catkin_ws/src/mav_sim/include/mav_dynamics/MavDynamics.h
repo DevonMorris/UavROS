@@ -17,7 +17,7 @@
 
 #include <mav_params/MavParams.h>
 
-typedef Eigen::Matrix<double, 12, 1> Vector12d;
+typedef Eigen::Matrix<float, 12, 1> Vector12f;
 
 namespace mav_dynamics
 {
@@ -37,20 +37,21 @@ private:
 
   // RK4 and dynamics
   void RK4(double dt);
-  Vector12d dynamics(Vector12d state);
+  Vector12f dynamics(Vector12f state);
 
   // tf broadcaster
   tf::TransformBroadcaster tf_br_;
 
   // state of the mav
-  Vector12d mav_state;
+  Vector12f mav_state;
 
   // inertia matrix
-  Eigen::Matrix3d J;
+  Eigen::Matrix3f J;
+  Eigen::Matrix3f J_inv;
 
   // force and torques
-  Eigen::Vector3d force;
-  Eigen::Vector3d torque;
+  Eigen::Vector3f force;
+  Eigen::Vector3f torque;
 
   // params
   mav_params::MavParams params_;

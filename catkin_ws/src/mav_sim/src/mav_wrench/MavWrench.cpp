@@ -10,6 +10,7 @@ namespace mav_wrench
     wrench_pub_ = nh_.advertise<geometry_msgs::Wrench>("/mav/wrench", 5);
     command_sub_ = nh_.subscribe("/mav/command", 5, &MavWrench::command_cb_, this);
     twist_sub_ = nh_.subscribe("/mav/twist", 5, &MavWrench::twist_cb_, this);
+    wind_sub_ = nh_.subscribe("/mav/wind", 5, &MavWrench::wind_cb_, this);
 
     // Initialize force and moment
     force << 0.0, 0.0, 0.0;
@@ -25,13 +26,13 @@ namespace mav_wrench
 
   void MavWrench::calcWrench()
   {
-    Eigen::Vector3d Force_g;
+    Eigen::Vector3f Force_g;
     Eigen::Quaternion<double> R_bv;
     tf::StampedTransform tf_bv;
 
     try
     {
-      tf_listener_.lookupTransform("vehicle", "base_link", 
+      tf_listener_.lookupTransform("base_link", "vehicle", 
           ros::Time(0), tf_bv);
     }
     catch(tf::TransformException &e)
@@ -46,65 +47,58 @@ namespace mav_wrench
     // Rotate gravity into body frame
     tf::quaternionTFToEigen(tf_bv.getRotation(), R_bv);
     Force_g << 0.0, 0.0, params_.m*params_.g;
-    Force_g = R_bv.inverse()*Force_g;
-    auto euler = R_bv.toRotationMatrix().eulerAngles(0,1,2);
+    Force_g = R_bv.cast <float>()*Force_g;
 
     /*
      * Aerodynamic forces and moments
      */
 
-    Eigen::Vector3d Force_aero;
-    Eigen::Vector3d Moment_aero;
+    Eigen::Vector3f Force_aero;
+    Eigen::Vector3f Moment_aero;
 
     // Calculate the airspeed
-    double V_a2 = linear.squaredNorm();
-    double V_a = linear.norm();
+    Eigen::Vector3f V_air = linear - wind;
+    float V_a2 = V_air.squaredNorm();
+    float V_a = V_air.norm();
 
     // Calculate angle of attack and rotation from stability to body frame
     // Note: we use the inverse to convert from active rotations to passive rotations
-    //ROS_ERROR_STREAM(linear);
-    double alpha = std::atan(linear(2)/linear(0));
+    float alpha = std::atan(V_air(2)/V_air(0));
     Eigen::Quaternion<double> R_bs(Eigen::AngleAxisd(alpha, Eigen::Vector3d::UnitY()));
-    R_bs = R_bs.inverse();
-
-    double beta = 0;
+    float beta = std::asin(V_air(1)/V_a);
+    ROS_DEBUG_STREAM("Alpha " << alpha);
+    ROS_DEBUG_STREAM("Beta " << beta);
+    ROS_DEBUG_STREAM("V_a " << V_a);
 
     // Calculate longitudinal forces and moments
-    if (V_a < 1e-3 || std::isnan(V_a))
+    if (V_a < 1 || std::isnan(V_a))
     {
-      Force_aero << 0.0, 0.0, 0.0;
-      Moment_aero << 0.0, 0.0, 0.0;
+      ROS_WARN_STREAM("[mav_wrench]: SMALL AIRSPEED");
+      alpha = 0;
+      Force_aero = Eigen::Vector3f::Zero();
+      Moment_aero = Eigen::Vector3f::Zero();
     }
     else
     {
-      double AR = std::pow(params_.b,2)/params_.S;
-      double sigma_alpha = sigma(alpha);
-      double C_Lflat = 2*sgn(alpha)*std::pow(std::sin(alpha),2)*std::cos(alpha);
-      double C_Lalpha = (1.0 - sigma_alpha)*(params_.C_L0 + C_Lalpha*alpha) + sigma_alpha*C_Lflat;
-      double C_Dalpha = params_.C_Dp + std::pow(params_.C_L0 + params_.C_Lalpha*alpha, 2) /
+      float AR = std::pow(params_.b,2)/params_.S;
+      float sigma_alpha = sigma(alpha);
+      float C_Lflat = 2*sgn(alpha)*std::pow(std::sin(alpha),2)*std::cos(alpha);
+      float C_Lalpha = (1.0 - sigma_alpha)*(params_.C_L0 + C_Lalpha*alpha) + sigma_alpha*C_Lflat;
+      float C_Dalpha = params_.C_Dp + std::pow(params_.C_L0 + params_.C_Lalpha*alpha, 2) /
         (M_PI*params_.e*AR);
-      double F_lift = .5*params_.rho*V_a2*params_.S*(C_Lalpha + 
+      float F_lift = .5*params_.rho*V_a2*params_.S*(C_Lalpha + 
           params_.C_Lq*(.5*params_.c/V_a)*angular(1) + params_.C_Ldele*command.dele); 
-      double F_drag = .5*params_.rho*V_a2*params_.S*(C_Dalpha + 
+      float F_drag = .5*params_.rho*V_a2*params_.S*(C_Dalpha + 
           params_.C_Dq*(.5*params_.c/V_a)*angular(1) + params_.C_Ddele*command.dele); 
 
       Force_aero << -F_drag, 0, -F_lift;
-      Force_aero = R_bs*Force_aero;
+      Force_aero = R_bs.cast<float>()*Force_aero;
 
       Moment_aero(1) = .5*params_.rho*V_a2*params_.S*params_.c*(params_.C_m0 +
           params_.C_malpha*alpha + params_.C_mq*(.5*params_.c/V_a)*angular(1) + 
           params_.C_mdele*command.dele);
-    }
-
 
     // Calculate lateral forces and moments
-    if (V_a < 1e-3 || std::isnan(V_a) || true)
-    {
-      Force_aero(1) = 0.0;
-      Moment_aero(0) = 0.0; Moment_aero(2) = 0.0;
-    }
-    else
-    {
       Force_aero(1) = .5*params_.rho*V_a2*params_.S*(params_.C_Y0 +
          params_.C_Ybeta*beta + params_.C_Yp*(.5*params_.b/V_a)*angular(0) + 
          params_.C_Yr*(.5*params_.b/V_a)*angular(2) + params_.C_Ydela*command.dela +
@@ -124,11 +118,11 @@ namespace mav_wrench
     /*
      * Propulsion Forces and Moments
      */
-    Eigen::Vector3d Force_prop;
-    Eigen::Vector3d Moment_prop;
+    Eigen::Vector3f Force_prop;
+    Eigen::Vector3f Moment_prop;
 
     Force_prop(0) = .5*params_.rho*params_.Sprop*params_.C_prop*
-      (std::pow(params_.k_motor*command.delt, 2) - V_a2);
+      (std::pow(params_.k_motor*command.delt, 2) - std::pow(V_air(0),2));
 
     Moment_prop(0) = -params_.k_Tp*std::pow(params_.k_Omega*command.delt,2);
 
@@ -136,10 +130,10 @@ namespace mav_wrench
      * Sum of Forces and Moments
      */
     force = Force_prop + Force_g + Force_aero;
-    torque = Moment_prop;// + Moment_aero;
+    torque = Moment_prop + Moment_aero;
   }
 
-  double MavWrench::sigma(double alpha)
+  float MavWrench::sigma(float alpha)
   {
     return (1.0 + std::exp(-params_.M*(alpha - params_.alpha0)) 
         + std::exp(params_.M*(alpha+params_.alpha0))) /
@@ -161,6 +155,10 @@ namespace mav_wrench
     angular << msg->angular.x, msg->angular.y, msg->angular.z;
   }
 
+  void MavWrench::wind_cb_(const geometry_msgs::Vector3ConstPtr& msg)
+  {
+    wind << msg->x, msg->y, msg->z;
+  }
 
   void MavWrench::tick()
   {
