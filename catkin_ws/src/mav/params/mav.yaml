@@ -54,7 +54,7 @@
 #C_ndela: -0.00328
 #C_Ydelr: 0.0
 #C_ldelr: 0.0
-#C_ndelr: 0.0
+C_ndelr: 0.0
 
 # Aerosonde Params
 g: 9.81 # acceleration due to gravity
@@ -80,7 +80,7 @@ C_L0: 0.28
 C_D0: 0.03
 C_m0: -0.02338
 C_Lalpha: 3.45
-C_Dalpha: 0.3
+C_Dalpha: 0.30
 C_malpha: -0.38
 C_Lq: 0.0
 C_Dq: 0.0

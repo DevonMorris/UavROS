@@ -3,18 +3,25 @@
 namespace mav_wind
 {
   MavWind::MavWind():
-    nh_(ros::NodeHandle())
+    nh_(ros::NodeHandle()),
+    rd(),
+    gen(rd()),
+    d(0,1)
   {
     // publishers and subscribers
     wind_pub_ = nh_.advertise<geometry_msgs::Vector3>("/mav/wind", 5);
-    twist_sub_ = nh_.subscribe("/mav/twist", 5, &MavWind::twist_cb_, this);
+    steady_wind_sub_ = nh_.subscribe("/steady_wind", 5, &MavWind::steady_wind_cb_, this);
 
     // Initialize wind
-    wind << 0.0, 0.0, 0.0;
+    wind = Eigen::Vector3f::Zero();
+    wind_b = Eigen::Vector3f::Zero();
+    gust = Eigen::Vector3f::Zero();
+    rand = Eigen::Vector3f::Zero();
+    rand1 = Eigen::Vector3f::Zero();
+    rand2 = Eigen::Vector3f::Zero();
+    gust1 = Eigen::Vector3f::Zero();
+    gust2 = Eigen::Vector3f::Zero();
 
-    // Initialize linear and angular
-    linear << 0.0, 0.0, 0.0;
-    angular << 0.0, 0.0, 0.0;
   }
 
   void MavWind::calcWind()
@@ -33,14 +40,28 @@ namespace mav_wind
     }
 
     tf::quaternionTFToEigen(tf_bv.getRotation(), R_bv);
+    wind_b = R_bv.cast <float>()*wind;
 
-    float V_a = (linear - wind).norm();
+    rand << d(gen), d(gen), d(gen);
+    // These transfer functions were created using the dryden gust model
+    // and Matlab's c2d command
+    gust(0) = 0.9983*gust1(0) + 0.006266*rand(0) + 0.006266*rand1(0);
+    //gust(1) = 1.997*gust1(1) - 0.9965*gust2(1) + 0.007671*rand(1) + 7.746e-6*rand1(1) - 0.007663*rand2(1);
+    // For some reason the params in the book don't work for y
+    gust(1) = 1.986*gust1(1) - 0.9861*gust2(1) + 0.01009*rand(1) + 4.071e-5*rand1(1) - 0.01005*rand2(1);
+    gust(2) = 1.986*gust1(2) - 0.9861*gust2(2) + 0.01009*rand(2) + 4.071e-5*rand1(2) - 0.01005*rand2(2);
+
+    // delay inputs and outputs
+    gust2 = gust1;
+    gust1 = gust;
+    rand2 = rand1;
+    rand1 = rand;
+
+    wind_b = wind_b + gust;
   }
-
-  void MavWind::twist_cb_(const geometry_msgs::TwistConstPtr& msg)
+  void MavWind::steady_wind_cb_(const geometry_msgs::Vector3ConstPtr& msg)
   {
-    linear << msg->linear.x, msg->linear.y, msg->linear.z;
-    angular << msg->angular.x, msg->angular.y, msg->angular.z;
+    wind << msg->x, msg->y, msg->z;
   }
 
   void MavWind::tick()
@@ -48,8 +69,9 @@ namespace mav_wind
     calcWind();
     geometry_msgs::Vector3 msg;
     
+    wind_b = Eigen::Vector3f::Zero();
     // pack up message and publish
-    msg.x = wind(0); msg.y = wind(1); msg.z = wind(2);
+    msg.x = wind_b(0); msg.y = wind_b(1); msg.z = wind_b(2);
     wind_pub_.publish(msg);
   }
 

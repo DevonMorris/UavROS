@@ -8,10 +8,11 @@ namespace mav_dynamics
   {
     ros::NodeHandle nh_private("~");
     now = ros::Time::now();
-    twist_pub_ = nh_.advertise<geometry_msgs::Twist>("/mav/twist", 5);
 
-    // Initialize state to 0
+    // Initialize state to 100m altitude and 35 m/s
     mav_state = Eigen::MatrixXf::Zero(12,1);
+    mav_state(2) = -500;
+    mav_state(6) = 35;
     // Initialize forces/torques to 0
     force = Eigen::Vector3f::Zero();
     torque = Eigen::Vector3f::Zero();
@@ -24,6 +25,7 @@ namespace mav_dynamics
     J_inv = J.inverse();
 
     // publishers and subscribes
+    twist_pub_ = nh_.advertise<geometry_msgs::Twist>("/mav/twist", 5);
     input_sub_ = nh_.subscribe("/mav/wrench", 5, &MavDynamics::ctrl_cb_, this);
   }
 
@@ -37,6 +39,7 @@ namespace mav_dynamics
   {
     // find timestep
     double dt = (ros::Time::now() - now).toSec();
+    ROS_WARN_STREAM("dt :" << dt);
     now = ros::Time::now();
 
     // Integrate the dynamics
@@ -110,10 +113,10 @@ namespace mav_dynamics
     Vector12f state_dot = Eigen::MatrixXf::Zero(12,1);
 
     //state derivatives
-    Eigen::Vector3f dpos;
-    Eigen::Vector3f datt;
-    Eigen::Vector3f dvel;
-    Eigen::Vector3f domega;
+    Eigen::Vector3f dpos = Eigen::Vector3f::Zero();
+    Eigen::Vector3f datt = Eigen::Vector3f::Zero();
+    Eigen::Vector3f dvel = Eigen::Vector3f::Zero();
+    Eigen::Vector3f domega = Eigen::Vector3f::Zero();
 
     //unpack state
     Eigen::Vector3f pos;
@@ -143,6 +146,12 @@ namespace mav_dynamics
     Eigen::Quaternion<float> R_vb (Eigen::AngleAxisf(att(0), Eigen::Vector3f::UnitX()) *
                            Eigen::AngleAxisf(att(1), Eigen::Vector3f::UnitY()) *
                            Eigen::AngleAxisf(att(2), Eigen::Vector3f::UnitZ())); 
+
+    // I used this matrix to check my sanity with the quaternion
+    //Eigen::Matrix3f m;
+    //m << ctheta*cpsi, sphi*stheta*spsi - cphi*spsi, cphi*stheta*cpsi + sphi*spsi,
+    //     ctheta*spsi, sphi*stheta*spsi + cphi*cpsi, cphi*stheta*spsi - sphi*cpsi,
+    //     -stheta, sphi*ctheta, cphi*ctheta;
 
     // Make matrix for datt
     Eigen::Matrix3f AttD;

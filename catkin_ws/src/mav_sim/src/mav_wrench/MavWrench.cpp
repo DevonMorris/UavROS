@@ -13,12 +13,13 @@ namespace mav_wrench
     wind_sub_ = nh_.subscribe("/mav/wind", 5, &MavWrench::wind_cb_, this);
 
     // Initialize force and moment
-    force << 0.0, 0.0, 0.0;
-    torque << 0.0, 0.0, 0.0;
+    force = Eigen::Vector3f::Zero();
+    torque = Eigen::Vector3f::Zero();
+    wind = Eigen::Vector3f::Zero();
 
     // Initialize linear and angular
-    linear << 0.0, 0.0, 0.0;
-    angular << 0.0, 0.0, 0.0;
+    linear = Eigen::Vector3f::Zero();
+    angular = Eigen::Vector3f::Zero();
 
     // Initialize command
     command.dela = 0; command.dele = 0; command.delr = 0; command.delt = 0;
@@ -26,7 +27,7 @@ namespace mav_wrench
 
   void MavWrench::calcWrench()
   {
-    Eigen::Vector3f Force_g;
+    Eigen::Vector3f Force_g = Eigen::Vector3f::Zero();
     Eigen::Quaternion<double> R_bv;
     tf::StampedTransform tf_bv;
 
@@ -53,8 +54,8 @@ namespace mav_wrench
      * Aerodynamic forces and moments
      */
 
-    Eigen::Vector3f Force_aero;
-    Eigen::Vector3f Moment_aero;
+    Eigen::Vector3f Force_aero = Eigen::Vector3f::Zero();
+    Eigen::Vector3f Moment_aero = Eigen::Vector3f::Zero();
 
     // Calculate the airspeed
     Eigen::Vector3f V_air = linear - wind;
@@ -63,63 +64,65 @@ namespace mav_wrench
 
     // Calculate angle of attack and rotation from stability to body frame
     // Note: we use the inverse to convert from active rotations to passive rotations
-    float alpha = std::atan(V_air(2)/V_air(0));
+    float alpha = std::atan2(V_air(2),V_air(0));
     Eigen::Quaternion<double> R_bs(Eigen::AngleAxisd(alpha, Eigen::Vector3d::UnitY()));
+    R_bs = R_bs.inverse();
     float beta = std::asin(V_air(1)/V_a);
-    ROS_DEBUG_STREAM("Alpha " << alpha);
-    ROS_DEBUG_STREAM("Beta " << beta);
-    ROS_DEBUG_STREAM("V_a " << V_a);
 
     // Calculate longitudinal forces and moments
     if (V_a < 1 || std::isnan(V_a))
     {
-      ROS_WARN_STREAM("[mav_wrench]: SMALL AIRSPEED");
-      alpha = 0;
-      Force_aero = Eigen::Vector3f::Zero();
-      Moment_aero = Eigen::Vector3f::Zero();
+      ROS_WARN_STREAM("Small Airspeed");
+      V_a = 1;
     }
-    else
-    {
-      float AR = std::pow(params_.b,2)/params_.S;
-      float sigma_alpha = sigma(alpha);
-      float C_Lflat = 2*sgn(alpha)*std::pow(std::sin(alpha),2)*std::cos(alpha);
-      float C_Lalpha = (1.0 - sigma_alpha)*(params_.C_L0 + C_Lalpha*alpha) + sigma_alpha*C_Lflat;
-      float C_Dalpha = params_.C_Dp + std::pow(params_.C_L0 + params_.C_Lalpha*alpha, 2) /
-        (M_PI*params_.e*AR);
-      float F_lift = .5*params_.rho*V_a2*params_.S*(C_Lalpha + 
-          params_.C_Lq*(.5*params_.c/V_a)*angular(1) + params_.C_Ldele*command.dele); 
-      float F_drag = .5*params_.rho*V_a2*params_.S*(C_Dalpha + 
-          params_.C_Dq*(.5*params_.c/V_a)*angular(1) + params_.C_Ddele*command.dele); 
+    float AR = std::pow(params_.b,2)/params_.S;
+    float sigma_alpha = sigma(alpha);
+    float C_Lflat = 2*sgn(alpha)*std::pow(std::sin(alpha),2)*std::cos(alpha);
+    //float C_Lalpha = (1.0 - sigma_alpha)*(params_.C_L0 + params_.C_Lalpha*alpha) + sigma_alpha*C_Lflat;
+    float C_Lalpha = params_.C_L0 + params_.C_Lalpha*alpha;
+    //float C_Dalpha = params_.C_Dp + std::pow(params_.C_L0 + params_.C_Lalpha*alpha, 2.0) /
+    //  (M_PI*params_.e*AR);
+    float C_Dalpha = params_.C_D0 + params_.C_Dalpha*alpha;
 
-      Force_aero << -F_drag, 0, -F_lift;
-      Force_aero = R_bs.cast<float>()*Force_aero;
+    float F_lift = .5*params_.rho*V_a2*params_.S*(C_Lalpha + 
+        params_.C_Lq*(.5*params_.c/V_a)*0*angular(1) + params_.C_Ldele*command.dele); 
+    float F_drag = .5*params_.rho*V_a2*params_.S*(C_Dalpha + 
+        params_.C_Dq*(.5*params_.c/V_a)*0*angular(1) + params_.C_Ddele*command.dele); 
 
-      Moment_aero(1) = .5*params_.rho*V_a2*params_.S*params_.c*(params_.C_m0 +
-          params_.C_malpha*alpha + params_.C_mq*(.5*params_.c/V_a)*angular(1) + 
-          params_.C_mdele*command.dele);
+    Force_aero << -F_drag, 0, -F_lift;
+    // coded rotation matrix to check quaternion math
+    //Eigen::Matrix3f m;
+    //m << std::cos(alpha), 0, -std::sin(alpha),
+    //     0, 0, 0,
+    //     std::sin(alpha), 0, std::cos(alpha);
 
-    // Calculate lateral forces and moments
-      Force_aero(1) = .5*params_.rho*V_a2*params_.S*(params_.C_Y0 +
-         params_.C_Ybeta*beta + params_.C_Yp*(.5*params_.b/V_a)*angular(0) + 
-         params_.C_Yr*(.5*params_.b/V_a)*angular(2) + params_.C_Ydela*command.dela +
-         params_.C_Ydelr*command.delr);
+    Force_aero = R_bs.cast<float>()*Force_aero;
 
-      Moment_aero(0) = .5*params_.rho*V_a2*params_.S*(params_.C_l0 +
-         params_.C_lbeta*beta + params_.C_lp*(.5*params_.b/V_a)*angular(0) + 
-         params_.C_lr*(.5*params_.b/V_a)*angular(2) + params_.C_ldela*command.dela +
-         params_.C_ldelr*command.delr);
+    Moment_aero(1) = .5*params_.rho*V_a2*params_.S*params_.c*(params_.C_m0 +
+        params_.C_malpha*alpha + params_.C_mq*(.5*params_.c/V_a)*angular(1) + 
+        params_.C_mdele*command.dele);
 
-      Moment_aero(2) = .5*params_.rho*V_a2*params_.S*(params_.C_n0 +
-         params_.C_nbeta*beta + params_.C_np*(.5*params_.b/V_a)*angular(0) + 
-         params_.C_nr*(.5*params_.b/V_a)*angular(2) + params_.C_ndela*command.dela +
-         params_.C_ndelr*command.delr);
-    }
+  // Calculate lateral forces and moments
+    Force_aero(1) = .5*params_.rho*V_a2*params_.S*(params_.C_Y0 +
+       params_.C_Ybeta*beta + params_.C_Yp*(.5*params_.b/V_a)*angular(0) + 
+       params_.C_Yr*(.5*params_.b/V_a)*angular(2) + params_.C_Ydela*command.dela +
+       params_.C_Ydelr*command.delr);
+
+    Moment_aero(0) = .5*params_.rho*V_a2*params_.S*params_.b*(params_.C_l0 +
+       params_.C_lbeta*beta + params_.C_lp*(.5*params_.b/V_a)*angular(0) + 
+       params_.C_lr*(.5*params_.b/V_a)*angular(2) + params_.C_ldela*command.dela +
+       params_.C_ldelr*command.delr);
+
+    Moment_aero(2) = .5*params_.rho*V_a2*params_.S*params_.b*(params_.C_n0 +
+       params_.C_nbeta*beta + params_.C_np*(.5*params_.b/V_a)*angular(0) + 
+       params_.C_nr*(.5*params_.b/V_a)*angular(2) + params_.C_ndela*command.dela +
+       params_.C_ndelr*command.delr);
 
     /*
      * Propulsion Forces and Moments
      */
-    Eigen::Vector3f Force_prop;
-    Eigen::Vector3f Moment_prop;
+    Eigen::Vector3f Force_prop = Eigen::Vector3f::Zero();
+    Eigen::Vector3f Moment_prop = Eigen::Vector3f::Zero();
 
     Force_prop(0) = .5*params_.rho*params_.Sprop*params_.C_prop*
       (std::pow(params_.k_motor*command.delt, 2) - std::pow(V_air(0),2));
@@ -129,6 +132,10 @@ namespace mav_wrench
     /*
      * Sum of Forces and Moments
      */
+    ROS_WARN_STREAM("Gravity " << Force_g);
+    ROS_WARN_STREAM("Aerodynamics " << Force_aero);
+    ROS_WARN_STREAM("Prop " << Force_prop);
+    ROS_WARN_STREAM("V_air " << V_air);
     force = Force_prop + Force_g + Force_aero;
     torque = Moment_prop + Moment_aero;
   }
