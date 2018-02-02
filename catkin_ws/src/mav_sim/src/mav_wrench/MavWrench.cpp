@@ -132,10 +132,6 @@ namespace mav_wrench
     /*
      * Sum of Forces and Moments
      */
-    ROS_WARN_STREAM("Gravity " << Force_g);
-    ROS_WARN_STREAM("Aerodynamics " << Force_aero);
-    ROS_WARN_STREAM("Prop " << Force_prop);
-    ROS_WARN_STREAM("V_air " << V_air);
     force = Force_prop + Force_g + Force_aero;
     torque = Moment_prop + Moment_aero;
   }

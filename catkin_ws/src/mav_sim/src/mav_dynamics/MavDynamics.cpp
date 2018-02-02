@@ -39,7 +39,6 @@ namespace mav_dynamics
   {
     // find timestep
     double dt = (ros::Time::now() - now).toSec();
-    ROS_WARN_STREAM("dt :" << dt);
     now = ros::Time::now();
 
     // Integrate the dynamics
@@ -129,7 +128,6 @@ namespace mav_dynamics
     att << state(3), state(4), state(5);
     vel << state(6), state(7), state(8);
     omega << state(9), state(10), state(11);
-    ROS_WARN_STREAM("Omega " << omega);
 
     float cphi = std::cos(att(0));
     float sphi = std::sin(att(0));
