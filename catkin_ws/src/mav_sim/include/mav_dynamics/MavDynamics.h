@@ -10,25 +10,17 @@
 #include <vector>
 
 #include <geometry_msgs/Wrench.h>
+#include <geometry_msgs/Twist.h>
 
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 
-typedef Eigen::Matrix<double, 12, 1> Vector12d;
+#include <mav_params/MavParams.h>
+
+typedef Eigen::Matrix<float, 12, 1> Vector12f;
 
 namespace mav_dynamics
 {
-
-typedef struct
-{
-  double m; // mass
-
-  // moments of interia
-  double Jx; 
-  double Jy;
-  double Jz;
-  double Jxz;
-} parameters_mav;
 
 class MavDynamics
 {
@@ -36,31 +28,33 @@ private:
   // Ros node handles, publishers and subscribers
   ros::NodeHandle nh_;
   ros::Subscriber input_sub_;
+  ros::Publisher twist_pub_;
 
   ros::Time now;
 
   // callbacks for subs
-  void input_cb_(const geometry_msgs::WrenchConstPtr& msg);
+  void ctrl_cb_(const geometry_msgs::WrenchConstPtr& msg);
 
   // RK4 and dynamics
   void RK4(double dt);
-  Vector12d dynamics(Vector12d state);
+  Vector12f dynamics(Vector12f state);
 
   // tf broadcaster
   tf::TransformBroadcaster tf_br_;
 
   // state of the mav
-  Vector12d mav_state;
-
-  // inputs to the mav
-  Eigen::Vector3d force;
-  Eigen::Vector3d torque;
+  Vector12f mav_state;
 
   // inertia matrix
-  Eigen::Matrix3d J;
+  Eigen::Matrix3f J;
+  Eigen::Matrix3f J_inv;
+
+  // force and torques
+  Eigen::Vector3f force;
+  Eigen::Vector3f torque;
 
   // params
-  parameters_mav params_;
+  mav_params::MavParams params_;
   
 public:
   MavDynamics();

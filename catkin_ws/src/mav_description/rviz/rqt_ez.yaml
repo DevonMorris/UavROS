@@ -1,9 +1,12 @@
 publish_interval: 100
 settings:
-  /mav/d/data: {is_repeat: false, max: 0.0, min: -20.0}
-  /mav/e/data: {is_repeat: false, max: 20.0, min: -20.0}
-  /mav/n/data: {is_repeat: false, max: 20.0, min: -20.0}
-  /mav/phi/data: {is_repeat: false, max: 3.14, min: -3.14}
-  /mav/psi/data: {is_repeat: false, max: 3.14, min: -3.14}
-  /mav/theta/data: {is_repeat: false, max: 3.14, min: -3.14}
-texts: [/mav/d/data, /mav/n/data, /mav/e/data, /mav/phi/data, /mav/theta/data, /mav/psi/data]
+  /mav/command/dela: {is_repeat: false, max: 0.1, min: -0.1}
+  /mav/command/dele: {is_repeat: false, max: 0.3, min: -0.3}
+  /mav/command/delr: {is_repeat: false, max: 0.1, min: -0.1}
+  /mav/command/delt: {is_repeat: false, max: 1.0, min: 0.0}
+  /mav/command/header/frame_id: {is_repeat: false, max: 0, min: 0}
+  /mav/wind/x: {is_repeat: false, max: 3.0, min: -3.0}
+  /mav/wind/y: {is_repeat: false, max: 3.0, min: -3.0}
+  /mav/wind/z: {is_repeat: false, max: 3.0, min: -3.0}
+texts: [/mav/command/header/frame_id, /mav/command/dela, /mav/command/dele, /mav/command/delr,
+  /mav/command/delt, /mav/wind/x, /mav/wind/y, /mav/wind/z]
