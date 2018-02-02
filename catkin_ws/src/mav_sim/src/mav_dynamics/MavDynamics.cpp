@@ -88,6 +88,7 @@ namespace mav_dynamics
     Vector12f k_4 = dynamics(mav_state + dt*k_3);
     mav_state += (dt/6.0)*(k_1 + 2.0*k_2 + 2.0*k_3 + k_4);
 
+    // bouncing effect
     if (mav_state(2) > 0)
     {
       Eigen::Vector3f vel;
@@ -128,8 +129,7 @@ namespace mav_dynamics
     att << state(3), state(4), state(5);
     vel << state(6), state(7), state(8);
     omega << state(9), state(10), state(11);
-
-    //ROS_ERROR_STREAM(vel);
+    ROS_WARN_STREAM("Omega " << omega);
 
     float cphi = std::cos(att(0));
     float sphi = std::sin(att(0));
@@ -143,13 +143,13 @@ namespace mav_dynamics
     // Transformation to convert body into vehicle (i.e. NED)
     // note: vehicle to body is given, then we take the inverse, but Eigen uses active rotations
     // instead of passive rotations so we take the inverse again
-    Eigen::Quaternion<float> R_vb (Eigen::AngleAxisf(att(0), Eigen::Vector3f::UnitX()) *
-                           Eigen::AngleAxisf(att(1), Eigen::Vector3f::UnitY()) *
-                           Eigen::AngleAxisf(att(2), Eigen::Vector3f::UnitZ())); 
+    Eigen::Quaternion<float> R_vb (Eigen::AngleAxisf(att(2), Eigen::Vector3f::UnitZ()) *
+                          Eigen::AngleAxisf(att(1), Eigen::Vector3f::UnitY()) *
+                          Eigen::AngleAxisf(att(0), Eigen::Vector3f::UnitX())); 
 
     // I used this matrix to check my sanity with the quaternion
-    //Eigen::Matrix3f m;
-    //m << ctheta*cpsi, sphi*stheta*spsi - cphi*spsi, cphi*stheta*cpsi + sphi*spsi,
+    //Eigen::Matrix3f R_vb;
+    //R_vb << ctheta*cpsi, sphi*stheta*spsi - cphi*spsi, cphi*stheta*cpsi + sphi*spsi,
     //     ctheta*spsi, sphi*stheta*spsi + cphi*cpsi, cphi*stheta*spsi - sphi*cpsi,
     //     -stheta, sphi*ctheta, cphi*ctheta;
 
@@ -159,7 +159,6 @@ namespace mav_dynamics
     AttD << 1.0, sphi*ttheta, cphi*ttheta,
             0.0, cphi, -sphi,
             0.0, sphi/ctheta, cphi/ctheta;
-
 
     // Calculate derivatives
     dpos = R_vb*vel;
