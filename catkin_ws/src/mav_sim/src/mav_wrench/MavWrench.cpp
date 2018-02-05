@@ -78,11 +78,11 @@ namespace mav_wrench
     float AR = std::pow(params_.b,2)/params_.S;
     float sigma_alpha = sigma(alpha);
     float C_Lflat = 2*sgn(alpha)*std::pow(std::sin(alpha),2)*std::cos(alpha);
-    //float C_Lalpha = (1.0 - sigma_alpha)*(params_.C_L0 + params_.C_Lalpha*alpha) + sigma_alpha*C_Lflat;
-    float C_Lalpha = params_.C_L0 + params_.C_Lalpha*alpha;
-    //float C_Dalpha = params_.C_Dp + std::pow(params_.C_L0 + params_.C_Lalpha*alpha, 2.0) /
-    //  (M_PI*params_.e*AR);
-    float C_Dalpha = params_.C_D0 + params_.C_Dalpha*alpha;
+    float C_Lalpha = (1.0 - sigma_alpha)*(params_.C_L0 + params_.C_Lalpha*alpha) + sigma_alpha*C_Lflat;
+    //float C_Lalpha = params_.C_L0 + params_.C_Lalpha*alpha;
+    float C_Dalpha = params_.C_Dp + std::pow(params_.C_L0 + params_.C_Lalpha*alpha, 2.0) /
+      (M_PI*params_.e*AR);
+    // float C_Dalpha = params_.C_D0 + params_.C_Dalpha*alpha;
 
     float F_lift = .5*params_.rho*V_a2*params_.S*(C_Lalpha + 
         params_.C_Lq*(.5*params_.c/V_a)*0*angular(1) + params_.C_Ldele*command.dele); 

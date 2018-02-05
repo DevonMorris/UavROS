@@ -68,8 +68,7 @@ namespace mav_wind
   {
     calcWind();
     geometry_msgs::Vector3 msg;
-    
-    wind_b = Eigen::Vector3f::Zero();
+
     // pack up message and publish
     msg.x = wind_b(0); msg.y = wind_b(1); msg.z = wind_b(2);
     wind_pub_.publish(msg);
