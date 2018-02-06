@@ -66,6 +66,11 @@ class MavParams
     double C_Ydelr;
     double C_ldelr;
     double C_ndelr;
+
+    // Trim Conditions
+    double Va;
+    double R;
+    double gamma;
 };
 
 } 

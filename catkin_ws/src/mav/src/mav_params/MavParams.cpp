@@ -56,7 +56,10 @@ MavParams::MavParams(ros::NodeHandle& nh_)
         !nh_.getParam("/mav/C_ndela", C_ndela) || 
         !nh_.getParam("/mav/C_Ydelr", C_Ydelr) ||
         !nh_.getParam("/mav/C_ldelr", C_ldelr) ||
-        !nh_.getParam("/mav/C_ndelr", C_ndelr))
+        !nh_.getParam("/mav/C_ndelr", C_ndelr) ||
+        !nh_.getParam("/mav/Va", Va) ||
+        !nh_.getParam("/mav/R", R) ||
+        !nh_.getParam("/mav/gamma", gamma))
         
     {
       ROS_ERROR("[%s] params not found on rosparam server", ros::this_node::getName().c_str());
