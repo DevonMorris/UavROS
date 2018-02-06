@@ -1,19 +1,27 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(mav_msgs)
+project(mav_utils)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
+add_compile_options(-std=c++11)
+set(CMAKE_CXX_STANDARD 11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  geometry_msgs
-  message_generation
-  message_runtime
   roscpp
   std_msgs
+  message_generation
+  message_runtime
+  geometry_msgs
+  sensor_msgs
+  mav_msgs
+  mav
 )
+
+find_package(Eigen3 REQUIRED)
+find_package(Ceres REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -49,19 +57,16 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-add_message_files(
-  DIRECTORY msg
-  FILES
-  Command.msg
-  Trim.msg
-)
+# add_message_files(
+#   FILES
+#   Message1.msg
+#   Message2.msg
+# )
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+add_service_files(
+  FILES
+  Trim.srv)
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -72,9 +77,10 @@ add_message_files(
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
- DEPENDENCIES
- geometry_msgs
- std_msgs
+  DEPENDENCIES
+  std_msgs  # Or other packages containing msgs
+  geometry_msgs
+  mav_msgs
 )
 
 ################################################
@@ -107,7 +113,10 @@ generate_messages(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  CATKIN_DEPENDS geometry_msgs std_msgs
+   INCLUDE_DIRS include
+#  LIBRARIES mav_utils
+#  CATKIN_DEPENDS roscpp
+#  DEPENDS system_lib
 )
 
 ###########
@@ -117,13 +126,15 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+  include
   ${catkin_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIRS}
+  ${Ceres_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/mav_msgs.cpp
+#   src/${PROJECT_NAME}/mav_utils.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -134,22 +145,25 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/mav_msgs_node.cpp)
+add_executable(${PROJECT_NAME}_mav_trim src/mav_trim/MavTrim.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
 ## e.g. "rosrun someones_pkg node" instead of "rosrun someones_pkg someones_pkg_node"
-# set_target_properties(${PROJECT_NAME}_node PROPERTIES OUTPUT_NAME node PREFIX "")
+set_target_properties(${PROJECT_NAME}_mav_trim PROPERTIES OUTPUT_NAME mav_trim PREFIX "")
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
+MESSAGE(STATUS "Ceres_LIBRARIES:            " ${Ceres_LIBRARIES})
+
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(${PROJECT_NAME}_node
-#   ${catkin_LIBRARIES}
-# )
+target_link_libraries(${PROJECT_NAME}_mav_trim
+   ${catkin_LIBRARIES}
+   ${CERES_LIBRARIES}
+)
 
 #############
 ## Install ##
@@ -191,7 +205,7 @@ include_directories(
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_mav_msgs.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_mav_utils.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

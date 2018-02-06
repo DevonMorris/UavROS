@@ -1,0 +1,7 @@
+# request fields
+mav_msgs/Trim trims # trim conditions
+---
+# response fields
+geometry_msgs/Vector3 euler # roll pitch yaw
+geometry_msgs/Twist vels # angular and linear velocities
+mav_msgs/Command commands # control surface deflections and thrust
