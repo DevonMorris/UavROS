@@ -1,32 +1,5 @@
 #include "mav_trim/MavTrim.h"
 
-int main(int argc, char** argv)
-{
-  google::InitGoogleLogging(argv[0]);
-
-  double x = 0.5;
-  const double initial_x = x;
-
-  ceres::Problem problem;
-
-  ceres::CostFunction* cost_function =
-    new ceres::AutoDiffCostFunction<CostFunctor, 1, 1>(new CostFunctor);
-
-  problem.AddResidualBlock(cost_function, nullptr, &x);
-
-  // Run the solver
-  ceres::Solver::Options options;
-  options.minimizer_progress_to_stdout = true;
-  ceres::Solver::Summary summary;
-  ceres::Solve(options, &problem, &summary);
-
-  std::cout << summary.BriefReport() << "\n";
-  std::cout << "x : " << initial_x
-            << " -> " << x << "\n";
-  
-  return 0;
-}
-
 namespace mav_trim
 {
   MavTrim::MavTrim() :
@@ -109,7 +82,31 @@ namespace mav_trim
     return state_dot;
   }
 
-  Vector6f MavTrim::calcWrench(Eigen::Vector3f trim, Eigen::Vector3f abr)
+  bool MavTrim::trim_cb_(mav_utils::Trim::Request req, mav_utils::Trim::Response resp)
+  {
+    trim << req.trims.Va, req.trims.gamma, req.trims.R;
+    
+    ceres::Problem problem;
+
+    ceres::CostFunction* cost_function =
+      new ceres::AutoDiffCostFunction<TrimFunctor, 1, 1>(new TrimFunctor);
+
+    problem.AddResidualBlock(cost_function, nullptr, &x);
+
+    // Run the solver
+    ceres::Solver::Options options;
+    options.minimizer_progress_to_stdout = true;
+    ceres::Solver::Summary summary;
+    ceres::Solve(options, &problem, &summary);
+
+    std::cout << summary.BriefReport() << "\n";
+    std::cout << "x : " << initial_x
+              << " -> " << x << "\n";
+    
+    return true;
+  }
+
+  Vector6f MavTrim::calcWrench(Eigen::Vector3f abr)
   {
     float gamma = trim(2);
     float phi = abr(2);
@@ -134,6 +131,7 @@ namespace mav_trim
                V_a*std::sin(phi)*std::cos(theta)*std::cos(gamma)/R,
                V_a*std::cos(phi)*std::cos(theta)*std::cos(gamma)/R;
 
+    // put in other commands
     Command command;
     command.dele = ((params_.Jxz*(std::pow(angular(0),2) - std::pow(angular(2),2))+
           (params_.Jx - params_.Jz)*angular(0)*angular(2))
@@ -148,7 +146,7 @@ namespace mav_trim
     // We do the same thing as in mav_dynamics and take the inverse because
     // active vs passive rotations
     Eigen::Quaternion<float> R_bv1 (Eigen::AngleAxisf(theta, Eigen::Vector3f::UnitY()) *
-              Eigen::AngleAxisf(phi, Eigen::Vector3f::UnitX());
+              Eigen::AngleAxisf(phi, Eigen::Vector3f::UnitX()));
     R_bv1 = R_bv1.inverse();
 
     /*
