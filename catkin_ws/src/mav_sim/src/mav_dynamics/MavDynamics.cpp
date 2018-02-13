@@ -39,9 +39,9 @@ namespace mav_dynamics
   bool MavDynamics::trim()
   {
     mav_utils::Trim srv;
-    srv.request.trims.Va = 35.0;
-    srv.request.trims.R = 100000.0;
-    srv.request.trims.gamma = 0.0;
+    nh_.getParam("/mav/Va", srv.request.trims.Va);
+    nh_.getParam("/mav/R", srv.request.trims.R);
+    nh_.getParam("/mav/gamma", srv.request.trims.gamma);
 
     if (trim_srv_.call(srv))
     {

@@ -29,9 +29,9 @@ namespace mav_wrench
   bool MavWrench::trim()
   {
     mav_utils::Trim srv;
-    srv.request.trims.Va = 35.0;
-    srv.request.trims.R = 100000.0;
-    srv.request.trims.gamma = 0.0;
+    nh_.getParam("/mav/Va", srv.request.trims.Va);
+    nh_.getParam("/mav/R", srv.request.trims.R);
+    nh_.getParam("/mav/gamma", srv.request.trims.gamma);
 
     if (trim_srv_.call(srv))
     {
@@ -148,7 +148,7 @@ namespace mav_wrench
     Eigen::Vector3f Moment_prop = Eigen::Vector3f::Zero();
 
     Force_prop(0) = .5*params_.rho*params_.Sprop*params_.C_prop*
-      (std::pow(params_.k_motor*command.delt, 2) - std::pow(V_air(0),2));
+      (std::pow(params_.k_motor*command.delt, 2) - V_a2);
 
     Moment_prop(0) = -params_.k_Tp*std::pow(params_.k_Omega*command.delt,2);
 

@@ -42,9 +42,9 @@ namespace mav_trim
 
     // calculate trim state of the system
     float phi = abr[2];
-    float theta = abr[2] + trim(2);
+    float theta = abr[0] + trim(2);
     float u = trim(0)*std::cos(abr[0])*std::cos(abr[1]);
-    float v = trim(0)*std::sin(abr[0]);
+    float v = trim(0)*std::sin(abr[1]);
     float w = trim(0)*std::sin(abr[0])*std::cos(abr[1]);
     float p = -trim(0)*std::sin(theta)/trim(1);
     float q = trim(0)*std::sin(abr[2])*std::cos(theta)/trim(1);
@@ -104,7 +104,7 @@ namespace mav_trim
     state_dot(2) = u*stheta - v*sphi*ctheta - w*cphi*ctheta;
     state_dot(3) = r*v-q*w - p_.g*stheta + 
       0.5*p_.rho*V_a2*p_.S*(C_X + 0.5*C_Xq*(p_.c*q/trim(0)) + C_Xdele*command.dele)/p_.m +
-      0.5*p_.Sprop*p_.C_prop;
+      0.5*p_.Sprop*p_.C_prop*(std::pow(p_.k_motor*command.delt,2)- V_a2)/p_.m;
     state_dot(4) = p*w - r*u + p_.g*ctheta*sphi + 
           .5*p_.rho*V_a2*p_.S*(p_.C_Y0 + p_.C_Ybeta*abr[1] + 
             0.5*p_.C_Yp*p_.b*p/trim(0) + 0.5*p_.C_Yr*p_.b*r/trim(0) + 
@@ -131,6 +131,9 @@ namespace mav_trim
   {
     ROS_WARN_STREAM("TRIMMING");
     trim << req.trims.Va, req.trims.R, req.trims.gamma;
+
+    Vector12f mav_state;
+    Eigen::Vector4f cmd;
     
     double abr[3]= {0.0, 0.0, 0.0};
     double initial_abr[3] = {0.0, 0.0, 0.0};
@@ -179,9 +182,9 @@ namespace mav_trim
 
     // calculate trim state of the system
     float phi = abr[2];
-    float theta = abr[2] + trim(2);
+    float theta = abr[0] + trim(2);
     float u = trim(0)*std::cos(abr[0])*std::cos(abr[1]);
-    float v = trim(0)*std::sin(abr[0]);
+    float v = trim(0)*std::sin(abr[1]);
     float w = trim(0)*std::sin(abr[0])*std::cos(abr[1]);
     float p = -trim(0)*std::sin(abr[0] + trim(2))/trim(1);
     float q = trim(0)*std::sin(abr[2])*std::cos(theta)/trim(1);
@@ -214,11 +217,11 @@ namespace mav_trim
           (p_.Jx - p_.Jz)*p*r)
         /(.5*p_.rho*V_a2*p_.c*p_.S) 
         - p_.C_m0 - p_.C_malpha*abr[0] 
-        - p_.C_mq*(0.5*p_.c*q/trim(0)))/p_.C_mdele;
+        - p_.C_mq*0.5*p_.c*q/trim(0))/p_.C_mdele;
 
     command.delt = std::sqrt(2.0*p_.m*(-r*v + q*w +
         p_.g*std::sin(theta) - p_.rho*V_a2*p_.S*
-        (C_X+C_Xq*(.5*p_.c*q/trim(0))+C_Xdele*command.dele)) /
+        (C_X+C_Xq*.5*p_.c*q/trim(0) + C_Xdele*command.dele)) /
         (p_.rho*p_.Sprop*p_.C_prop*std::pow(p_.k_motor,2)) + 
         V_a2/(std::pow(p_.k_motor, 2)));
 
@@ -241,6 +244,63 @@ namespace mav_trim
     resp.vels.angular.x = p; resp.vels.angular.y = q; resp.vels.angular.z = r;
     resp.commands.dela = command.dela; resp.commands.dele = command.dele;
     resp.commands.delr = command.delr; resp.commands.delt = command.delt;
+
+    mav_state(0) = 0.0; mav_state(1) = 0.0; mav_state(2) = 0.0;
+    mav_state(3) = abr[2]; mav_state(4) = theta; mav_state(5) = 0.0;
+    mav_state(6) = u; mav_state(7) = v; mav_state(8) = w;
+    mav_state(9) = p; mav_state(10) = q; mav_state(11) = r;
+
+    cmd(0) = command.dela; cmd(1) = command.dele; cmd(2) = command.delr; cmd(3) = command.delt;
+
+    ROS_WARN_STREAM("Trimmed States : \n" << mav_state);
+    ROS_WARN_STREAM("Trimmed Inputs : \n" << cmd);
+
+    Eigen::RowVector3f num;
+    Eigen::RowVector3f den;
+
+    float a_phi1 = -.25*p_.rho*V_a2*p_.b*p_.b*C_pp*p_.b/trim(0);
+    float a_phi2 = 0.5*p_.rho*V_a2*p_.S*p_.b*C_pdela;
+    num << 0.0, 0.0, a_phi1;
+    den << 1.0, a_phi1, 0.0;
+    ROS_WARN_STREAM("TF phi/dela : \n" << num << "\n" << den);
+
+    num << 0.0, 0.0, p_.g/trim(0);
+    den << 0.0, 1.0, 0.0;
+    ROS_WARN_STREAM("TF chi/phi : \n" << num << "\n" << den);
+
+
+    float a_theta1 = -0.25*p_.rho*V_a2*p_.c*p_.S*p_.c*p_.C_mq/(p_.Jy*trim(0));
+    float a_theta2 = -.5*p_.rho*V_a2*p_.c*p_.S*p_.C_malpha/p_.Jy;
+    float a_theta3 = .5*p_.rho*V_a2*p_.c*p_.S*p_.C_mdele/p_.Jy;
+    num << 0.0, 0.0, a_theta3;
+    den << 1.0, a_theta1, a_theta2;
+    ROS_WARN_STREAM("TF theta/dele : \n" << num << "\n" << den);
+
+    num << 0.0, 0.0, trim(0);
+    den << 0.0, 1.0, 0.0;
+    ROS_WARN_STREAM("TF h/theta : \n" << num << "\n" << den);
+
+    num << 0.0, 0.0, theta;
+    den << 0.0, 1.0, 0.0;
+    ROS_WARN_STREAM("TF h/Va : \n" << num << "\n" << den);
+
+    float a_V1 = p_.rho*trim(0)*p_.S*(p_.C_D0 + p_.C_Dalpha*abr[0] + p_.C_Ddele*command.dele)/p_.m +
+      p_.rho*p_.Sprop*p_.C_prop*trim(0)/p_.m;
+    float a_V2 = p_.rho*p_.Sprop*p_.C_prop*std::pow(p_.k_motor,2)*command.delt/p_.m;
+    float a_V3 = p_.g*std::cos(theta - abr[0]);
+    num << 0.0, 0.0, a_V2;
+    den << 0.0, 1.0, a_V1;
+    ROS_WARN_STREAM("TF Va/delt : \n" << num << "\n" << den);
+
+    num << 0.0, 0.0, -a_V3;
+    den << 0.0, 1.0, a_V1;
+    ROS_WARN_STREAM("TF Va/theta : \n" << num << "\n" << den);
+
+    float a_beta1 = -0.5*p_.rho*p_.S*trim(0)*p_.C_Ybeta/p_.m;
+    float a_beta2 = 0.5*p_.rho*p_.S*trim(0)*p_.C_Ydelr/p_.m;
+    num << 0.0, 0.0, trim(0)*a_beta2;
+    den << 0.0, 1.0, a_beta1;
+    ROS_WARN_STREAM("TF v/delr : \n" << num << "\n" << den);
 
     return true;
   }
