@@ -9,10 +9,11 @@ namespace mav_dynamics
     ros::NodeHandle nh_private("~");
     now = ros::Time::now();
 
-    // Initialize state to 100m altitude and 35 m/s
+    // Initialize mav_state to trim conditions
     mav_state = Eigen::MatrixXf::Zero(12,1);
-    mav_state(2) = -500;
-    mav_state(6) = 35;
+    mav_state(2) = -250;
+    trim_srv_ = nh_.serviceClient<mav_utils::Trim>("/mav/trim"); 
+
     // Initialize forces/torques to 0
     force = Eigen::Vector3f::Zero();
     torque = Eigen::Vector3f::Zero();
@@ -33,6 +34,32 @@ namespace mav_dynamics
   {
     force << msg->force.x, msg->force.y, msg->force.z;
     torque << msg->torque.x, msg->torque.y, msg->torque.z;
+  }
+
+  bool MavDynamics::trim()
+  {
+    mav_utils::Trim srv;
+    srv.request.trims.Va = 35.0;
+    srv.request.trims.R = 100000.0;
+    srv.request.trims.gamma = 0.0;
+
+    if (trim_srv_.call(srv))
+    {
+      mav_state(3) = srv.response.euler.x;
+      mav_state(4) = srv.response.euler.y;
+      mav_state(6) = srv.response.vels.linear.x;
+      mav_state(7) = srv.response.vels.linear.y;
+      mav_state(8) = srv.response.vels.linear.z;
+      mav_state(9) = srv.response.vels.angular.x;
+      mav_state(10) = srv.response.vels.angular.y;
+      mav_state(11) = srv.response.vels.angular.z;
+      return true;
+    }
+    else
+    {
+      ROS_WARN_STREAM("Could not call trim service");
+      return false;
+    }
   }
 
   void MavDynamics::tick()

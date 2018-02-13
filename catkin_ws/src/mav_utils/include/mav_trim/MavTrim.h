@@ -34,19 +34,29 @@ typedef struct{
 
 class MavTrim
 {
-private:
-  // Ros services
-  ros::ServiceServer trim_service_;
-
-  // callbacks for subs
-  bool trim_cb_(mav_utils::Trim::Request req, mav_utils::Trim::Response resp);
-
 public:
   // Ros node handles, publishers and subscribers
   ros::NodeHandle nh_;
   Eigen::Vector3f trim;
 
   MavTrim();
+
+private:
+  // Ros services
+  ros::ServiceServer trim_service_;
+
+  float sigma(float alpha);
+
+  template <class T>  int sgn(T val) 
+  {
+    return (T(0) < val) - (val < T(0));
+  }
+
+  // callbacks for subs
+  bool trim_cb_(mav_utils::Trim::Request &req,
+      mav_utils::Trim::Response &resp);
+
+  mav_params::MavParams p_;
 }; //end class MavTrim
 
 struct TrimFunctor
@@ -54,32 +64,42 @@ struct TrimFunctor
   TrimFunctor(MavTrim* mtrim);
 
   // Functions to calculate dynamics and forces/moments
-  template <typename T>
-  Vector12f dynamics(T abr);
+  Vector12f dynamics(const double* abr) const;
 
-  float sigma(float alpha);
+  float sigma(float alpha) const;
 
-  template <class T>  int sgn(T val)
+  template <class T>  int sgn(T val) const
   {
     return (T(0) < val) - (val < T(0));
   }
 
   // Trim conditions
-  Eigen::Vector3f trim;
+  const Eigen::Vector3f trim;
 
   // params
-  mav_params::MavParams p_;
+  const mav_params::MavParams p_;
 
-  template <typename T>
-  bool operator()(const T* const abr, T* residual) const
+  bool operator()(const double* const abr, double* residual) const
   {
     Vector12f xdot, fx;
-    xdot << 0.0, 0.0, trim(0)*std::sin(trim(1)), // position derivatives
+    xdot << 0.0, 0.0, trim(0)*std::sin(trim(2)), // position derivatives
             0.0, 0.0, 0.0,  // heading derivatives
-            0.0, 0.0, trim(0)*std::cos(trim(1))/trim(2), // velocity derivatives
+            0.0, 0.0, trim(0)*std::cos(trim(2))/trim(1), // velocity derivatives
             0.0, 0.0, 0.0; // angular velocity derivatives
     fx = dynamics(abr);
-    residual[0] = xdot(0) - fx(0);
+    //ROS_WARN_STREAM("fx " << fx);
+    residual[0] = fx(0) - xdot(0);
+    residual[1] = fx(1) - xdot(1);
+    residual[2] = fx(2) - xdot(2);
+    residual[3] = fx(3) - xdot(3);
+    residual[4] = fx(4) - xdot(4);
+    residual[5] = fx(5) - xdot(5);
+    residual[6] = fx(6) - xdot(6);
+    residual[7] = fx(7) - xdot(7);
+    residual[8] = fx(8) - xdot(8);
+    residual[9] = fx(9) - xdot(9);
+    residual[10] = fx(10) - xdot(10);
+    residual[11] = fx(11) - xdot(11);
     return true;
   }
 };

@@ -8,6 +8,7 @@
   <rosparam command="load" file="$(find mav)/params/mav.yaml" ns="mav" />
 
   <node name="tf_frames" pkg="mav" type="tf_frames" />
+  <node name="trim" pkg="mav_utils" type="mav_trim" output="screen" />
   <node name="mav_dynamics" pkg="mav_sim" type="mav_dynamics" ns="mav" output="screen"/>
   <node name="mav_wrench" pkg="mav_sim" type="mav_wrench" ns="mav" output="screen"/>
   <node name="mav_wind" pkg="mav_sim" type="mav_wind" ns="mav" output="screen"/>

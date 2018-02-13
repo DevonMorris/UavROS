@@ -12,6 +12,10 @@ int main(int argc, char **argv){
   ros::spinOnce();
   r.sleep();
 
+  while (!dynam.trim()){
+    ros::spinOnce();
+    r.sleep();
+  }
   while(ros::ok()){
     dynam.tick();
     ros::spinOnce();

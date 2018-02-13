@@ -10,6 +10,12 @@ int main(int argc, char **argv){
   mav_wrench::MavWrench wrench;
 
   ros::Rate r(300);
+
+  while(!wrench.trim()){
+    ros::spinOnce();
+    r.sleep();
+  }
+
   while(ros::ok()){
     wrench.tick();
     ros::spinOnce();

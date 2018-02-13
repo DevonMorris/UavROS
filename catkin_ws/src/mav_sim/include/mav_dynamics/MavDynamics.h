@@ -16,6 +16,7 @@
 #include <Eigen/Geometry>
 
 #include <mav_params/MavParams.h>
+#include <mav_utils/Trim.h>
 
 typedef Eigen::Matrix<float, 12, 1> Vector12f;
 
@@ -29,6 +30,7 @@ private:
   ros::NodeHandle nh_;
   ros::Subscriber input_sub_;
   ros::Publisher twist_pub_;
+  ros::ServiceClient trim_srv_;
 
   ros::Time now;
 
@@ -59,6 +61,7 @@ private:
 public:
   MavDynamics();
   void tick();
+  bool trim();
 }; //end class MavDynamics
 
 } //end namespace

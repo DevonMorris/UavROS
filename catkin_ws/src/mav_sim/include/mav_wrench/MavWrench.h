@@ -13,6 +13,7 @@
 #include <mav_msgs/Command.h>
 
 #include <mav_params/MavParams.h>
+#include <mav_utils/Trim.h>
 
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
@@ -37,6 +38,7 @@ namespace mav_wrench
       ros::Subscriber twist_sub_;
       ros::Subscriber command_sub_;
       ros::Subscriber wind_sub_;
+      ros::ServiceClient trim_srv_;
       
       // tf listener
       tf::TransformListener tf_listener_; 
@@ -66,6 +68,7 @@ namespace mav_wrench
 
     public:
       MavWrench();
+      bool trim();
       void tick();
   };
 }

@@ -145,7 +145,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME}_mav_trim src/mav_trim/MavTrim.cpp)
+add_executable(${PROJECT_NAME}_mav_trim src/mav_trim/MavTrim.cpp src/mav_trim/trim_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -157,7 +157,7 @@ set_target_properties(${PROJECT_NAME}_mav_trim PROPERTIES OUTPUT_NAME mav_trim P
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-MESSAGE(STATUS "Ceres_LIBRARIES:            " ${Ceres_LIBRARIES})
+MESSAGE(STATUS "Ceres_LIBRARIES: " ${Ceres_LIBRARIES})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_mav_trim

@@ -54,7 +54,7 @@
 #C_ndela: -0.00328
 #C_Ydelr: 0.0
 #C_ldelr: 0.0
-C_ndelr: 0.0
+#C_ndelr: 0.0
 
 # Aerosonde Params
 g: 9.81 # acceleration due to gravity
@@ -116,5 +116,5 @@ C_ndelr: -0.032
 
 ## Trim Conditions
 Va: 35 # nominal airspeed m/s
-R: 1000000000000 # nominal turning radius m
+R: 1000000 # nominal turning radius m
 gamma: 0 # nominal flight path angle
