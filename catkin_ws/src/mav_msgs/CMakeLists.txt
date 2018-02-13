@@ -53,6 +53,7 @@ add_message_files(
   DIRECTORY msg
   FILES
   Command.msg
+  Trim.msg
 )
 
 ## Generate services in the 'srv' folder

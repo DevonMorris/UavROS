@@ -9,7 +9,13 @@ int main(int argc, char **argv){
   // instantiate TFViewer object
   mav_wrench::MavWrench wrench;
 
-  ros::Rate r(300);
+  ros::Rate r(100);
+
+  while(!wrench.trim()){
+    ros::spinOnce();
+    r.sleep();
+  }
+
   while(ros::ok()){
     wrench.tick();
     ros::spinOnce();

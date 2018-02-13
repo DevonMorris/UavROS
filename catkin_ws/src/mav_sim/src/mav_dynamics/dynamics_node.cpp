@@ -8,10 +8,14 @@ int main(int argc, char **argv){
   // instantiate TFViewer object
   mav_dynamics::MavDynamics dynam;
 
-  ros::Rate r(300);
+  ros::Rate r(100);
   ros::spinOnce();
   r.sleep();
 
+  while (!dynam.trim()){
+    ros::spinOnce();
+    r.sleep();
+  }
   while(ros::ok()){
     dynam.tick();
     ros::spinOnce();
