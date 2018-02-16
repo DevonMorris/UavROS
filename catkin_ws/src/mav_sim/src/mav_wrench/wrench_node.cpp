@@ -11,11 +11,6 @@ int main(int argc, char **argv){
 
   ros::Rate r(100);
 
-  while(!wrench.trim()){
-    ros::spinOnce();
-    r.sleep();
-  }
-
   while(ros::ok()){
     wrench.tick();
     ros::spinOnce();

@@ -21,31 +21,8 @@ namespace mav_wrench
     linear = Eigen::Vector3f::Zero();
     angular = Eigen::Vector3f::Zero();
 
-    trim_srv_ = nh_.serviceClient<mav_utils::Trim>("/mav/trim"); 
     // Initialize command
     command.dela = 0; command.dele = 0; command.delr = 0; command.delt = 0;
-  }
-
-  bool MavWrench::trim()
-  {
-    mav_utils::Trim srv;
-    nh_.getParam("/mav/Va", srv.request.trims.Va);
-    nh_.getParam("/mav/R", srv.request.trims.R);
-    nh_.getParam("/mav/gamma", srv.request.trims.gamma);
-
-    if (trim_srv_.call(srv))
-    {
-      command.dela = srv.response.commands.dela;
-      command.dele = srv.response.commands.dele;
-      command.delr = srv.response.commands.delr;
-      command.delt = srv.response.commands.delt;
-      return true;
-    }
-    else
-    {
-      ROS_WARN_STREAM("Could not call trim service");
-      return false;
-    }
   }
  
   void MavWrench::calcWrench()
