@@ -10,6 +10,7 @@
 #include <vector>
 
 #include <geometry_msgs/Wrench.h>
+#include <geometry_msgs/Vector3.h>
 #include <geometry_msgs/Twist.h>
 
 #include <Eigen/Dense>
@@ -30,6 +31,8 @@ private:
   ros::NodeHandle nh_;
   ros::Subscriber input_sub_;
   ros::Publisher twist_pub_;
+  ros::Publisher euler_pub_;
+  ros::Publisher ned_pub_;
   ros::ServiceClient trim_srv_;
 
   ros::Time now;

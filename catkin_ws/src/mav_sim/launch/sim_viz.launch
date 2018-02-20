@@ -2,7 +2,7 @@
 
   <arg name="model" default="$(find mav_description)/urdf/mav/mav.urdf"/>
   <arg name="rvizconfig" default="$(find mav_description)/rviz/mav.rviz"/>
-  <!--<arg name="sliderconfig" default="$(find mav_sim)/rviz/rqt_ez.yaml"/>-->
+  <arg name="sliderconfig" default="$(find mav_sim)/rviz/rqt_ez.yaml"/>
   <param name="robot_description" command="$(find xacro)/xacro.py $(arg model)"/>
 
   <rosparam command="load" file="$(find mav)/params/mav.yaml" ns="mav" />
@@ -11,11 +11,12 @@
   <node name="trim" pkg="mav_utils" type="mav_trim" output="screen" />
   <node name="mav_dynamics" pkg="mav_sim" type="mav_dynamics" ns="mav" output="screen"/>
   <node name="mav_wrench" pkg="mav_sim" type="mav_wrench" ns="mav" output="screen"/>
+  <node name="mav_controller" pkg="mav_controller" type="mav_controller" ns="mav" output="screen"/>
   <!--<node name="mav_wind" pkg="mav_sim" type="mav_wind" ns="mav" output="screen"/>-->
 
   <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)" required="true" />
-  <!--<node name="sliders" pkg="rqt_ez_publisher" type="rqt_ez_publisher" /> -->
+  <node name="sliders" pkg="rqt_ez_publisher" type="rqt_ez_publisher" /> 
 
 </launch>

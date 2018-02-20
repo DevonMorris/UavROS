@@ -22,7 +22,7 @@ namespace mav_wrench
     angular = Eigen::Vector3f::Zero();
 
     // Initialize command
-    command.dela = 0; command.dele = 0; command.delr = 0; command.delt = 0;
+    command.dela = 0; command.dele = -0.05; command.delr = 0; command.delt = 0.5;
   }
  
   void MavWrench::calcWrench()
@@ -69,6 +69,15 @@ namespace mav_wrench
     R_bs = R_bs.inverse();
     float beta = std::asin(V_air(1)/V_a);
 
+    if (std::isnan(alpha))
+    {
+      alpha = 0.0;
+    }
+    if (std::isnan(beta))
+    {
+      beta = 0.0;
+    }
+
     // Calculate longitudinal forces and moments
     if (V_a < 1 || std::isnan(V_a))
     {
@@ -77,6 +86,7 @@ namespace mav_wrench
     }
     float AR = std::pow(params_.b,2)/params_.S;
     float sigma_alpha = sigma(alpha);
+
     float C_Lflat = 2*sgn(alpha)*std::pow(std::sin(alpha),2)*std::cos(alpha);
     float C_Lalpha = (1.0 - sigma_alpha)*(params_.C_L0 + params_.C_Lalpha*alpha) + sigma_alpha*C_Lflat;
     //float C_Lalpha = params_.C_L0 + params_.C_Lalpha*alpha;
@@ -85,9 +95,9 @@ namespace mav_wrench
     // float C_Dalpha = params_.C_D0 + params_.C_Dalpha*alpha;
 
     float F_lift = .5*params_.rho*V_a2*params_.S*(C_Lalpha + 
-        params_.C_Lq*(.5*params_.c/V_a)*0*angular(1) + params_.C_Ldele*command.dele); 
+        params_.C_Lq*(.5*params_.c/V_a)*angular(1) + params_.C_Ldele*command.dele); 
     float F_drag = .5*params_.rho*V_a2*params_.S*(C_Dalpha + 
-        params_.C_Dq*(.5*params_.c/V_a)*0*angular(1) + params_.C_Ddele*command.dele); 
+        params_.C_Dq*(.5*params_.c/V_a)*angular(1) + params_.C_Ddele*command.dele); 
 
     Force_aero << -F_drag, 0, -F_lift;
     // coded rotation matrix to check quaternion math

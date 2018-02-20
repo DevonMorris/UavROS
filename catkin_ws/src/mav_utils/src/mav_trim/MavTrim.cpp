@@ -186,7 +186,7 @@ namespace mav_trim
     float u = trim(0)*std::cos(abr[0])*std::cos(abr[1]);
     float v = trim(0)*std::sin(abr[1]);
     float w = trim(0)*std::sin(abr[0])*std::cos(abr[1]);
-    float p = -trim(0)*std::sin(abr[0] + trim(2))/trim(1);
+    float p = -trim(0)*std::sin(theta)/trim(1);
     float q = trim(0)*std::sin(abr[2])*std::cos(theta)/trim(1);
     float r = trim(0)*std::cos(abr[2])*std::cos(theta)/trim(1);
 

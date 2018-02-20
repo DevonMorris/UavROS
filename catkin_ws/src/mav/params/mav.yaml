@@ -115,8 +115,8 @@ C_ldelr: 0.105
 C_ndelr: -0.032
 
 ## Trim Conditions
-Va: 25 # nominal airspeed m/s
-R: 100000000000000000.0 # nominal turning radius m
+Va: 30 # nominal airspeed m/s
+R: 100000000000.0 # nominal turning radius m
 #R: 250
 #gamma: 0 # nominal flight path angle
-gamma: -0.2
+gamma: 0.0

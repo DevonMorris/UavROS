@@ -6,11 +6,12 @@
 
 #include <tf/tf.h>
 #include <tf/transform_listener.h>
+#include <tf_conversions/tf_eigen.h>
 
 #include <vector>
 
-#include <geometry_msgs/Wrench.h>
 #include <geometry_msgs/Twist.h>
+#include <geometry_msgs/Vector3.h>
 
 #include <std_msgs/Float32.h>
 
@@ -42,20 +43,25 @@ private:
   ros::Subscriber h_sub_;
   ros::Subscriber Va_sub_;
   ros::Subscriber Chi_sub_;
+  ros::Subscriber twist_sub_;
+  ros::Subscriber euler_sub_;
+  ros::Subscriber ned_sub_;
+
   ros::Publisher command_pub_;
   ros::ServiceClient trim_srv_;
 
   // callbacks for subscribers
   void h_cb_(const std_msgs::Float32ConstPtr& msg);
   void Va_cb_(const std_msgs::Float32ConstPtr& msg);
-  void Chi_sub_(const std_msgs::Float32ConstPtr& msg);
+  void Chi_cb_(const std_msgs::Float32ConstPtr& msg);
+  void twist_cb_(const geometry_msgs::TwistConstPtr& msg);
+  void euler_cb_(const geometry_msgs::Vector3ConstPtr& msg);
+  void ned_cb_(const geometry_msgs::Vector3ConstPtr& msg);
 
   ros::Time now;
 
-  // subscribers
-
   // tf listener
-  tf::TransformListener tf_list_;
+  tf::TransformListener tf_listener_;
 
   // params
   float tau; // dirty derivative gain
@@ -69,28 +75,72 @@ private:
   float a_V2;
   float a_V3;
   float a_beta1;
-  float a_beta;
+  float a_beta2;
 
-  Command command;
+  float h_takeoff;
+  float h_hold;
+
+  // controller params
+  float kp_theta;
+  float kd_theta;
+  float k_theta_DC;
+
+  float kp_phi;
+  float kd_phi;
+  float ki_phi;
+  float int_phi;
+
+  float kp_chi;
+  float ki_chi;
+  float int_chi;
+
+  float ki_v2;
+  float kp_v2;
+  float int_v2;
+
+  float ki_v;
+  float kp_v;
+  float int_v;
+
+  float kp_h;
+  float ki_h;
+  float int_h;
+
+  float int_takeoff;
+
+  bool trimmed;
+
+
 
   // command variables
+  Command command;
+  Command command_trim;
   float h_c;
   float Va_c;
   float Chi_c;
 
-  // inertia matrix
-  Eigen::Matrix3f J;
-  Eigen::Matrix3f J_inv;
+  void compute_control();
 
   // mav state
   Vector12f mav_state;
 
-  // force and torques
-  Eigen::Vector3f force;
-  Eigen::Vector3f torque;
+  // sgn function
+  mav_params::MavParams p_;
 
-  // params
-  mav_params::MavParams params_;
+  template <class T>  int sgn(T val)
+  {
+    return (T(0) < val) - (val < T(0));
+  }
+
+  float saturate(float val, float low, float high)
+  {
+    if(val > high)
+      val = high;
+    else if (val < low)
+      val = low;
+    return val;
+  }
+
   
 public:
   MavController();

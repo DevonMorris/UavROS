@@ -11,7 +11,7 @@ namespace mav_dynamics
 
     // Initialize mav_state to trim conditions
     mav_state = Eigen::MatrixXf::Zero(12,1);
-    mav_state(2) = -250;
+    mav_state(2) = 0;
     trim_srv_ = nh_.serviceClient<mav_utils::Trim>("/mav/trim"); 
 
     // Initialize forces/torques to 0
@@ -27,6 +27,9 @@ namespace mav_dynamics
 
     // publishers and subscribes
     twist_pub_ = nh_.advertise<geometry_msgs::Twist>("/mav/twist", 5);
+    euler_pub_ = nh_.advertise<geometry_msgs::Vector3>("/mav/euler", 5);
+    ned_pub_ = nh_.advertise<geometry_msgs::Vector3>("/mav/ned", 5);
+
     input_sub_ = nh_.subscribe("/mav/wrench", 5, &MavDynamics::ctrl_cb_, this);
   }
 
@@ -104,6 +107,16 @@ namespace mav_dynamics
     msg.linear.x = mav_state(6); msg.linear.y = mav_state(7); msg.linear.z = mav_state(8);
     msg.angular.x = mav_state(9); msg.angular.y = mav_state(10); msg.angular.z = mav_state(11);
     twist_pub_.publish(msg);
+
+    // publish ned
+    geometry_msgs::Vector3 msg_n;
+    msg_n.x = mav_state(0); msg_n.y = mav_state(1); msg_n.z = mav_state(2);
+    ned_pub_.publish(msg_n);
+
+    // publish euler
+    geometry_msgs::Vector3 msg_e;
+    msg_e.x = mav_state(3); msg_e.y = mav_state(4); msg_e.z = mav_state(5);
+    euler_pub_.publish(msg_e);
   }
 
   void MavDynamics::RK4(double dt)

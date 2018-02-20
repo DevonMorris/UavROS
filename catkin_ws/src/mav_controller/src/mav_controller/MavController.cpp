@@ -1,10 +1,9 @@
 #include "mav_controller/MavController.h"
-
 namespace mav_controller
 {
   MavController::MavController() :
     nh_(ros::NodeHandle()),
-    params_(nh_)
+    p_(nh_)
   {
     ros::NodeHandle nh_private("~");
     now = ros::Time::now();
@@ -14,25 +13,62 @@ namespace mav_controller
     trim_srv_ = nh_.serviceClient<mav_utils::Trim>("/mav/trim"); 
 
     // publishers and subscribes
-    twist_pub_ = nh_.advertise<geometry_msgs::Twist>("/mav/twist", 5);
     h_sub_ = nh_.subscribe("/mav/h", 5, &MavController::h_cb_, this);
     Va_sub_ = nh_.subscribe("/mav/Va", 5, &MavController::Va_cb_, this);
     Chi_sub_ = nh_.subscribe("/mav/h", 5, &MavController::Chi_cb_, this);
+    twist_sub_ = nh_.subscribe("/mav/twist", 5, &MavController::twist_cb_, this);
+    euler_sub_ = nh_.subscribe("/mav/euler", 5, &MavController::euler_cb_, this);
+    ned_sub_ = nh_.subscribe("/mav/ned", 5, &MavController::ned_cb_, this);
+
+    command_pub_ = nh_.advertise<mav_msgs::Command>("/mav/command", 5);
+
+    command.dela = 0.0; command.dele = 0.0; command.delr = 0.0; command.delt = 0.0;
+    command_trim = command;
+    trimmed = false;
+
+    Va_c = p_.Va;
+    Chi_c = 0.0;
+    h_c = 200;
+    h_takeoff = 50;
+    h_hold = 50;
+
+    int_h = 0.0;
+    int_v = 0.0;
+    int_v2 = 0.0;
+    int_takeoff = 0.0;
+    int_phi = 0.0;
+    int_chi = 0.0;
   }
 
-  void MavController::h_cb_(const geometry_msgs::WrenchConstPtr& msg)
+  void MavController::h_cb_(const std_msgs::Float32ConstPtr& msg)
   {
     h_c = msg->data;
   }
 
-  void MavController::Va_cb_(const geometry_msgs::WrenchConstPtr& msg)
+  void MavController::Va_cb_(const std_msgs::Float32ConstPtr& msg)
   {
     Va_c = msg->data;
   }
 
-  void MavController::Chi_cb_(const geometry_msgs::WrenchConstPtr& msg)
+  void MavController::Chi_cb_(const std_msgs::Float32ConstPtr& msg)
   {
     Chi_c = msg->data;
+  }
+
+  void MavController::twist_cb_(const geometry_msgs::TwistConstPtr& msg)
+  {
+    mav_state(6) = msg->linear.x; mav_state(7) = msg->linear.y; mav_state(8) = msg->linear.z;
+    mav_state(9) = msg->angular.x; mav_state(10) = msg->angular.y; mav_state(11) = msg->angular.z;
+  }
+
+  void MavController::euler_cb_(const geometry_msgs::Vector3ConstPtr& msg)
+  {
+    mav_state(3) = msg->x; mav_state(4) = msg->y; mav_state(5) = msg->z;
+  }
+
+  void MavController::ned_cb_(const geometry_msgs::Vector3ConstPtr& msg)
+  {
+    mav_state(0) = msg->x; mav_state(1) = msg->y; mav_state(2) = msg->z;
   }
 
   bool MavController::trim()
@@ -57,19 +93,208 @@ namespace mav_controller
       command.dele = srv.response.commands.dele;
       command.delr = srv.response.commands.delr;
       command.delt = srv.response.commands.delt;
-      return true;
+      command_trim = command;
+      ROS_WARN_STREAM("command_trim delt " << command_trim.delt);
     }
     else
     {
       ROS_WARN_STREAM("Could not call trim service");
       return false;
     }
+
+    Eigen::Vector3f trim;
+    Eigen::Vector3f abr;
+
+    trim << srv.request.trims.Va, srv.request.trims.R, srv.request.trims.gamma;
+    abr << 0.0, 0.0, 0.0;
+
+    float theta = mav_state(4);
+    float V_a2 = std::pow(trim(0),2);
+
+    // Gamma terms
+    float Gamma = p_.Jx*p_.Jz - std::pow(p_.Jxz,2);
+    float Gamma1 = p_.Jxz*(p_.Jx - p_.Jy + p_.Jz)/Gamma;
+    float Gamma2 = (p_.Jz*(p_.Jz - p_.Jy) + std::pow(p_.Jxz,2))/Gamma;
+    float Gamma3 = p_.Jz/Gamma;
+    float Gamma4 = p_.Jxz/Gamma;
+    float Gamma5 = (p_.Jz - p_.Jx)/p_.Jy;
+    float Gamma6 = p_.Jxz/p_.Jy;
+    float Gamma7 = ((p_.Jx - p_.Jy)*p_.Jx + std::pow(p_.Jxz,2))/Gamma;
+    float Gamma8 = p_.Jx/Gamma;
+
+    // Roll rate and yaw rate coefficients
+    float C_p0 = Gamma3*p_.C_l0 + Gamma4*p_.C_n0;
+    float C_pbeta = Gamma3*p_.C_lbeta + Gamma4*p_.C_nbeta;
+    float C_pp = Gamma3*p_.C_lp + Gamma4*p_.C_np;
+    float C_pr = Gamma3*p_.C_lr + Gamma4*p_.C_nr;
+    float C_pdela = Gamma3*p_.C_ldela + Gamma4*p_.C_ndela;
+    float C_pdelr = Gamma3*p_.C_ldelr + Gamma4*p_.C_ndelr;
+    float C_r0 = Gamma4*p_.C_l0 + Gamma8*p_.C_n0;
+    float C_rbeta = Gamma4*p_.C_lbeta + Gamma8*p_.C_nbeta;
+    float C_rp = Gamma4*p_.C_lp + Gamma8*p_.C_np;
+    float C_rr = Gamma4*p_.C_lr + Gamma8*p_.C_nr;
+    float C_rdela = Gamma4*p_.C_ldela + Gamma8*p_.C_ndela;
+    float C_rdelr = Gamma4*p_.C_ldelr + Gamma8*p_.C_ndelr;
+
+    a_phi1 = -.25*p_.rho*V_a2*p_.b*p_.b*C_pp*p_.b/trim(0);
+    a_phi2 = 0.5*p_.rho*V_a2*p_.S*p_.b*C_pdela;
+    a_theta1 = -0.25*p_.rho*V_a2*p_.c*p_.S*p_.c*p_.C_mq/(p_.Jy*trim(0));
+    a_theta2 = -.5*p_.rho*V_a2*p_.c*p_.S*p_.C_malpha/p_.Jy;
+    a_theta3 = .5*p_.rho*V_a2*p_.c*p_.S*p_.C_mdele/p_.Jy;
+    a_V1 = p_.rho*trim(0)*p_.S*(p_.C_D0 + p_.C_Dalpha*abr(0) + p_.C_Ddele*command.dele)/p_.m +
+    p_.rho*p_.Sprop*p_.C_prop*trim(0)/p_.m;
+    a_V2 = p_.rho*p_.Sprop*p_.C_prop*std::pow(p_.k_motor,2)*command.delt/p_.m;
+    a_V3 = p_.g*std::cos(theta - abr(0));
+    a_beta1 = -0.5*p_.rho*p_.S*trim(0)*p_.C_Ybeta/p_.m;
+    a_beta2 = 0.5*p_.rho*p_.S*trim(0)*p_.C_Ydelr/p_.m;
+
+    // calculate gains for pitch altitude hold
+    kp_theta = sgn(a_theta3)*.1/.5;
+    float wn_theta = std::sqrt(a_theta2 + kp_theta*a_theta3);
+    kd_theta = (2*.8*wn_theta - a_theta1)/a_theta3;
+    k_theta_DC = kp_theta*a_theta3/(a_theta2 + kp_theta*a_theta3);
+    
+    float wn_v2 = wn_theta/10.;
+    ki_v2 = -std::pow(wn_v2,2)/(k_theta_DC*p_.g);
+    kp_v2 = std::abs((a_V1 - 2*.8*wn_v2)/(k_theta_DC*p_.g));
+
+    float wn_v = 2.2/2.0;
+    ki_v = std::pow(wn_v,2)/a_V2; 
+    kp_v = std::abs((2.0*.8*wn_v - a_V1)/a_V2);
+
+    float wn_h = wn_theta/15.;
+    ki_h = std::pow(wn_h,2)/(p_.Va*k_theta_DC);
+    kp_h = 2*.8*wn_h/(p_.Va*k_theta_DC);
+
+    kp_phi = sgn(a_phi2)*.5/1.0;
+    float wn_phi = std::sqrt(kp_phi*a_phi2);
+    kd_phi = (2*1.5*wn_phi - a_phi1)/a_phi2;
+    ki_phi = 0.01;
+    
+    float wn_chi = wn_phi/100.0;
+    kp_chi = 2*20.0*wn_chi*p_.Va/p_.g;
+    ki_chi = std::pow(wn_chi,2)*p_.Va/p_.g;
+
+    trimmed = true;
+
+    return true;
   }
 
   void MavController::tick()
   {
+    // find current state of mav
+    compute_control();
+
+    // pack up the message and publish
+    mav_msgs::Command msg;
+    msg.dela = command.dela; msg.dele = command.dele; msg.delr = command.delr; msg.delt = command.delt;
+    command_pub_.publish(msg);
+  }
+
+  void MavController::compute_control()
+  {
     // find timestep
     double dt = (ros::Time::now() - now).toSec();
+    now = ros::Time::now();
+
+    /*
+     * longitudinal control
+     */
+    Eigen::Vector3f vel;
+    vel << mav_state(6), mav_state(7), mav_state(8);
+    float V_a = vel.norm();
+
+    float h = -mav_state(2);
+
+    float theta_c;
+
+    // above altitude hold
+    if (h > h_c + h_hold)
+    {
+      command.delt = 0.2;
+      command.dele = kp_v2*(Va_c - V_a);
+    }
+    // altitude hold zone
+    else if (h > h_c - h_hold)
+    {
+      // elevator control
+      theta_c = kp_h*(h_c - h) + ki_h*int_h;
+      command.dele = kp_theta*(theta_c - mav_state(4)) - kd_theta*mav_state(10);
+
+      // thrust control
+      int_v += (Va_c - V_a)*dt;
+      if ((Va_c - V_a) < 0)
+        command.delt = command_trim.delt + ki_v*int_v;
+      else
+        command.delt = command_trim.delt + kp_v*(Va_c - V_a) + ki_v*int_v;
+    }
+    // climb zone
+    else if (h > h_takeoff)
+    {
+      command.delt = .45;
+      command.dele = kp_v2*(Va_c - V_a) + ki_v2*int_v2;
+    }
+    // takeoff zone
+    else
+    {
+      command.delt = .6;
+      theta_c = .2;
+      command.dele = kp_theta*(theta_c - mav_state(4)) - kd_theta*mav_state(10);
+    }
+
+    /*
+     * lateral control
+     */
+
+    if (h > h_takeoff)
+    {
+      float beta = std::atan2(mav_state(7), mav_state(6));
+      float chi = mav_state(5);
+      // int_chi += dt*(Chi_c - chi);
+      float e_chi = 0.0;
+      float e_phi = 0.0;
+      // wrap chi
+      e_chi = Chi_c - chi;
+      if (e_chi > (M_PI/2))
+      {
+        e_chi = e_chi - M_PI;
+      }
+      else if (e_chi < (-M_PI/2))
+      {
+        e_chi = e_chi + M_PI;
+      }
+      float phi_c = kp_chi*(e_chi) + ki_chi*int_chi;
+      ROS_WARN_STREAM("roll " << mav_state(3));
+      ROS_WARN_STREAM("pitch " << mav_state(4));
+      ROS_WARN_STREAM("yaw " << mav_state(5));
+      ROS_WARN_STREAM("e_chi " << e_chi);
+
+      e_phi = phi_c - mav_state(3);
+      // wrap phi
+      if (e_phi > (M_PI/2))
+      {
+        e_phi = e_phi - M_PI;
+      }
+      else if (e_phi < (-M_PI/2))
+      {
+        e_phi = e_phi + M_PI;
+      }
+      ROS_WARN_STREAM("e_phi " << e_phi);
+
+      command.dela = kp_phi*(e_phi) - ki_phi*int_phi - kd_phi*mav_state(9);
+      ROS_WARN_STREAM("dela " << command.dela << "\n");
+    }
+    else
+    {
+      command.dela = 0.0;
+    }
+
+
+    command.dela = 0.0;
+    command.dele = saturate(command.dele, -.1, .1);
+    command.dela = saturate(command.dela, -.05, .05);
+    
+    command.delr = 0.0; 
   }
 
 }
