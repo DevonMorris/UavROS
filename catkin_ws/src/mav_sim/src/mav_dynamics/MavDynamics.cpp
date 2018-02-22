@@ -26,17 +26,17 @@ namespace mav_dynamics
     J_inv = J.inverse();
 
     // publishers and subscribes
-    twist_pub_ = nh_.advertise<geometry_msgs::Twist>("/mav/twist", 5);
-    euler_pub_ = nh_.advertise<geometry_msgs::Vector3>("/mav/euler", 5);
-    ned_pub_ = nh_.advertise<geometry_msgs::Vector3>("/mav/ned", 5);
+    twist_pub_ = nh_.advertise<geometry_msgs::TwistStamped>("/mav/twist", 5);
+    euler_pub_ = nh_.advertise<geometry_msgs::Vector3Stamped>("/mav/euler", 5);
+    ned_pub_ = nh_.advertise<geometry_msgs::Vector3Stamped>("/mav/ned", 5);
 
     input_sub_ = nh_.subscribe("/mav/wrench", 5, &MavDynamics::ctrl_cb_, this);
   }
 
-  void MavDynamics::ctrl_cb_(const geometry_msgs::WrenchConstPtr& msg)
+  void MavDynamics::ctrl_cb_(const geometry_msgs::WrenchStampedConstPtr& msg)
   {
-    force << msg->force.x, msg->force.y, msg->force.z;
-    torque << msg->torque.x, msg->torque.y, msg->torque.z;
+    force << msg->wrench.force.x, msg->wrench.force.y, msg->wrench.force.z;
+    torque << msg->wrench.torque.x, msg->wrench.torque.y, msg->wrench.torque.z;
   }
 
   bool MavDynamics::trim()
@@ -84,7 +84,7 @@ namespace mav_dynamics
     // transform world frame to vehicle frame
     transform.setRotation(qNED2BODY);
     transform.setOrigin(tNED2BODY);
-    tf_br_.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world_ned", "vehicle"));
+    tf_br_.sendTransform(tf::StampedTransform(transform, now, "world_ned", "vehicle"));
 
     // transform vehicle frame to vehicle1 frame
     tNED2BODY.setValue(0., 0., 0.);
@@ -92,7 +92,7 @@ namespace mav_dynamics
     transform.setIdentity();
     transform.setRotation(qNED2BODY);
     transform.setOrigin(tNED2BODY);
-    tf_br_.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "vehicle", "vehicle1"));
+    tf_br_.sendTransform(tf::StampedTransform(transform, now, "vehicle", "vehicle1"));
 
     // transform vehicle1 frame to body
     tNED2BODY.setValue(0., 0., 0.);
@@ -100,22 +100,25 @@ namespace mav_dynamics
     transform.setIdentity();
     transform.setRotation(qNED2BODY);
     transform.setOrigin(tNED2BODY);
-    tf_br_.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "vehicle1", "base_link"));
+    tf_br_.sendTransform(tf::StampedTransform(transform, now, "vehicle1", "base_link"));
 
     // Publish the velocities
-    geometry_msgs::Twist msg; 
-    msg.linear.x = mav_state(6); msg.linear.y = mav_state(7); msg.linear.z = mav_state(8);
-    msg.angular.x = mav_state(9); msg.angular.y = mav_state(10); msg.angular.z = mav_state(11);
+    geometry_msgs::TwistStamped msg; 
+    msg.twist.linear.x = mav_state(6); msg.twist.linear.y = mav_state(7); msg.twist.linear.z = mav_state(8);
+    msg.twist.angular.x = mav_state(9); msg.twist.angular.y = mav_state(10); msg.twist.angular.z = mav_state(11);
+    msg.header.stamp = now;
     twist_pub_.publish(msg);
 
     // publish ned
-    geometry_msgs::Vector3 msg_n;
-    msg_n.x = mav_state(0); msg_n.y = mav_state(1); msg_n.z = mav_state(2);
+    geometry_msgs::Vector3Stamped msg_n;
+    msg_n.vector.x = mav_state(0); msg_n.vector.y = mav_state(1); msg_n.vector.z = mav_state(2);
+    msg_n.header.stamp = now;
     ned_pub_.publish(msg_n);
 
     // publish euler
-    geometry_msgs::Vector3 msg_e;
-    msg_e.x = mav_state(3); msg_e.y = mav_state(4); msg_e.z = mav_state(5);
+    geometry_msgs::Vector3Stamped msg_e;
+    msg_e.vector.x = mav_state(3); msg_e.vector.y = mav_state(4); msg_e.vector.z = mav_state(5);
+    msg.header.stamp = now;
     euler_pub_.publish(msg_e);
   }
 

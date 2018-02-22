@@ -10,8 +10,8 @@
 
 #include <vector>
 
-#include <geometry_msgs/Twist.h>
-#include <geometry_msgs/Vector3.h>
+#include <geometry_msgs/TwistStamped.h>
+#include <geometry_msgs/Vector3Stamped.h>
 
 #include <std_msgs/Float32.h>
 
@@ -54,9 +54,9 @@ private:
   void h_cb_(const std_msgs::Float32ConstPtr& msg);
   void Va_cb_(const std_msgs::Float32ConstPtr& msg);
   void Chi_cb_(const std_msgs::Float32ConstPtr& msg);
-  void twist_cb_(const geometry_msgs::TwistConstPtr& msg);
-  void euler_cb_(const geometry_msgs::Vector3ConstPtr& msg);
-  void ned_cb_(const geometry_msgs::Vector3ConstPtr& msg);
+  void twist_cb_(const geometry_msgs::TwistStampedConstPtr& msg);
+  void euler_cb_(const geometry_msgs::Vector3StampedConstPtr& msg);
+  void ned_cb_(const geometry_msgs::Vector3StampedConstPtr& msg);
 
   ros::Time now;
 

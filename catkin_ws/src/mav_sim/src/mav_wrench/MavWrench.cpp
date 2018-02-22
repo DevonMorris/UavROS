@@ -7,7 +7,7 @@ namespace mav_wrench
     params_(nh_)
   {
     // publishers and subscribers
-    wrench_pub_ = nh_.advertise<geometry_msgs::Wrench>("/mav/wrench", 5);
+    wrench_pub_ = nh_.advertise<geometry_msgs::WrenchStamped>("/mav/wrench", 5);
     command_sub_ = nh_.subscribe("/mav/command", 5, &MavWrench::command_cb_, this);
     twist_sub_ = nh_.subscribe("/mav/twist", 5, &MavWrench::twist_cb_, this);
     wind_sub_ = nh_.subscribe("/mav/wind", 5, &MavWrench::wind_cb_, this);
@@ -162,25 +162,26 @@ namespace mav_wrench
     command.delt = msg->delt;
   }
 
-  void MavWrench::twist_cb_(const geometry_msgs::TwistConstPtr& msg)
+  void MavWrench::twist_cb_(const geometry_msgs::TwistStampedConstPtr& msg)
   {
-    linear << msg->linear.x, msg->linear.y, msg->linear.z;
-    angular << msg->angular.x, msg->angular.y, msg->angular.z;
+    linear << msg->twist.linear.x, msg->twist.linear.y, msg->twist.linear.z;
+    angular << msg->twist.angular.x, msg->twist.angular.y, msg->twist.angular.z;
   }
 
-  void MavWrench::wind_cb_(const geometry_msgs::Vector3ConstPtr& msg)
+  void MavWrench::wind_cb_(const geometry_msgs::Vector3StampedConstPtr& msg)
   {
-    wind << msg->x, msg->y, msg->z;
+    wind << msg->vector.x, msg->vector.y, msg->vector.z;
   }
 
   void MavWrench::tick()
   {
     calcWrench();
-    geometry_msgs::Wrench msg;
+    geometry_msgs::WrenchStamped msg;
     
     // pack up message and publish
-    msg.force.x = force(0); msg.force.y = force(1); msg.force.z = force(2);
-    msg.torque.x = torque(0); msg.torque.y = torque(1); msg.torque.z = torque(2);
+    msg.wrench.force.x = force(0); msg.wrench.force.y = force(1); msg.wrench.force.z = force(2);
+    msg.wrench.torque.x = torque(0); msg.wrench.torque.y = torque(1); msg.wrench.torque.z = torque(2);
+    msg.header.stamp = ros::Time::now();
     wrench_pub_.publish(msg);
   }
 

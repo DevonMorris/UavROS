@@ -13,9 +13,9 @@ namespace mav_controller
     trim_srv_ = nh_.serviceClient<mav_utils::Trim>("/mav/trim"); 
 
     // publishers and subscribes
-    h_sub_ = nh_.subscribe("/mav/h", 5, &MavController::h_cb_, this);
-    Va_sub_ = nh_.subscribe("/mav/Va", 5, &MavController::Va_cb_, this);
-    Chi_sub_ = nh_.subscribe("/mav/chi", 5, &MavController::Chi_cb_, this);
+    h_sub_ = nh_.subscribe("/mav/h_c", 5, &MavController::h_cb_, this);
+    Va_sub_ = nh_.subscribe("/mav/Va_c", 5, &MavController::Va_cb_, this);
+    Chi_sub_ = nh_.subscribe("/mav/chi_c", 5, &MavController::Chi_cb_, this);
     twist_sub_ = nh_.subscribe("/mav/twist", 5, &MavController::twist_cb_, this);
     euler_sub_ = nh_.subscribe("/mav/euler", 5, &MavController::euler_cb_, this);
     ned_sub_ = nh_.subscribe("/mav/ned", 5, &MavController::ned_cb_, this);
@@ -55,20 +55,20 @@ namespace mav_controller
     Chi_c = msg->data;
   }
 
-  void MavController::twist_cb_(const geometry_msgs::TwistConstPtr& msg)
+  void MavController::twist_cb_(const geometry_msgs::TwistStampedConstPtr& msg)
   {
-    mav_state(6) = msg->linear.x; mav_state(7) = msg->linear.y; mav_state(8) = msg->linear.z;
-    mav_state(9) = msg->angular.x; mav_state(10) = msg->angular.y; mav_state(11) = msg->angular.z;
+    mav_state(6) = msg->twist.linear.x; mav_state(7) = msg->twist.linear.y; mav_state(8) = msg->twist.linear.z;
+    mav_state(9) = msg->twist.angular.x; mav_state(10) = msg->twist.angular.y; mav_state(11) = msg->twist.angular.z;
   }
 
-  void MavController::euler_cb_(const geometry_msgs::Vector3ConstPtr& msg)
+  void MavController::euler_cb_(const geometry_msgs::Vector3StampedConstPtr& msg)
   {
-    mav_state(3) = msg->x; mav_state(4) = msg->y; mav_state(5) = msg->z;
+    mav_state(3) = msg->vector.x; mav_state(4) = msg->vector.y; mav_state(5) = msg->vector.z;
   }
 
-  void MavController::ned_cb_(const geometry_msgs::Vector3ConstPtr& msg)
+  void MavController::ned_cb_(const geometry_msgs::Vector3StampedConstPtr& msg)
   {
-    mav_state(0) = msg->x; mav_state(1) = msg->y; mav_state(2) = msg->z;
+    mav_state(0) = msg->vector.x; mav_state(1) = msg->vector.y; mav_state(2) = msg->vector.z;
   }
 
   bool MavController::trim()

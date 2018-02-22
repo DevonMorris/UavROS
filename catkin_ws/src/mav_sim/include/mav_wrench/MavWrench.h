@@ -7,9 +7,9 @@
 #include <tf/transform_datatypes.h>
 #include <tf_conversions/tf_eigen.h>
 
-#include <geometry_msgs/Wrench.h>
-#include <geometry_msgs/Twist.h>
-#include <geometry_msgs/Vector3.h>
+#include <geometry_msgs/WrenchStamped.h>
+#include <geometry_msgs/TwistStamped.h>
+#include <geometry_msgs/Vector3Stamped.h>
 #include <mav_msgs/Command.h>
 
 #include <mav_params/MavParams.h>
@@ -44,8 +44,8 @@ namespace mav_wrench
 
       // callbacks for subscribers
       void command_cb_(const mav_msgs::CommandConstPtr& msg);
-      void twist_cb_(const geometry_msgs::TwistConstPtr& msg);
-      void wind_cb_(const geometry_msgs::Vector3ConstPtr& msg);
+      void twist_cb_(const geometry_msgs::TwistStampedConstPtr& msg);
+      void wind_cb_(const geometry_msgs::Vector3StampedConstPtr& msg);
 
       Command command;
       void calcWrench();

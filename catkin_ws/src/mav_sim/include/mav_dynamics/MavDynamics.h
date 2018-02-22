@@ -9,9 +9,9 @@
 
 #include <vector>
 
-#include <geometry_msgs/Wrench.h>
-#include <geometry_msgs/Vector3.h>
-#include <geometry_msgs/Twist.h>
+#include <geometry_msgs/WrenchStamped.h>
+#include <geometry_msgs/Vector3Stamped.h>
+#include <geometry_msgs/TwistStamped.h>
 
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
@@ -38,7 +38,7 @@ private:
   ros::Time now;
 
   // callbacks for subs
-  void ctrl_cb_(const geometry_msgs::WrenchConstPtr& msg);
+  void ctrl_cb_(const geometry_msgs::WrenchStampedConstPtr& msg);
 
   // RK4 and dynamics
   void RK4(double dt);
