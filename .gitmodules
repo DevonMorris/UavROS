@@ -1,0 +1,3 @@
+[submodule "catkin_ws/src/mav_utils/src/mav_plotter"]
+	path = catkin_ws/src/mav_utils/src/mav_plotter
+	url = https://magiccvs.byu.edu/gitlab/lab/state_plotter.git
