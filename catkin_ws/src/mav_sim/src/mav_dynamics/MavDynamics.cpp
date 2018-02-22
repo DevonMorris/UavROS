@@ -11,7 +11,7 @@ namespace mav_dynamics
 
     // Initialize mav_state to trim conditions
     mav_state = Eigen::MatrixXf::Zero(12,1);
-    mav_state(2) = 0;
+    mav_state(2) = -0;
     trim_srv_ = nh_.serviceClient<mav_utils::Trim>("/mav/trim"); 
 
     // Initialize forces/torques to 0
