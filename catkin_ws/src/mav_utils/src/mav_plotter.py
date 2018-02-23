@@ -62,9 +62,9 @@ class PlotWrapper:
 
         # Subscribe to relevant ROS topics
         rospy.Subscriber('twist', TwistStamped, self.velocity_cb_)
-        rospy.Subscriber('Imu', Imu, self.imu_cb_)
+        rospy.Subscriber('imu', Imu, self.imu_cb_)
         rospy.Subscriber('Va_c', Float32, self.va_cb_)
-        rospy.Subscriber('GPS', Vector3Stamped, self.gps_cb_)
+        rospy.Subscriber('gps', Vector3Stamped, self.gps_cb_)
         rospy.Subscriber('h_c', Float32, self.h_cb_)
         rospy.Subscriber('chi_c', Float32, self.chi_cb_)
 
@@ -99,7 +99,16 @@ class PlotWrapper:
         self.plotter.add_measurement('Va', Va, t)
 
     def imu_cb_(self, msg):
-        pass
+        t = msg.header.stamp.to_sec()
+
+        gyro = msg.angular_velocity
+        acc = msg.linear_acceleration
+
+        self.plotter.add_vector_measurement('acc',
+                [acc.x, acc.y, acc.z], t)
+
+        self.plotter.add_vector_measurement('ang_gyro',
+                [gyro.x, gyro.y, gyro.z], t, rad2deg=self.use_degrees)
 
     def va_cb_(self, msg):
         # Extract time

@@ -148,6 +148,7 @@ include_directories(
 add_executable(${PROJECT_NAME}_mav_dynamics src/mav_dynamics/dynamics_node.cpp src/mav_dynamics/MavDynamics.cpp)
 add_executable(${PROJECT_NAME}_mav_wrench src/mav_wrench/wrench_node.cpp src/mav_wrench/MavWrench.cpp)
 add_executable(${PROJECT_NAME}_mav_wind src/mav_wind/wind_node.cpp src/mav_wind/MavWind.cpp)
+add_executable(${PROJECT_NAME}_mav_imu src/mav_sensors/imu_node.cpp src/mav_sensors/MavIMU.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -156,6 +157,7 @@ add_executable(${PROJECT_NAME}_mav_wind src/mav_wind/wind_node.cpp src/mav_wind/
 set_target_properties(${PROJECT_NAME}_mav_dynamics PROPERTIES OUTPUT_NAME mav_dynamics PREFIX "")
 set_target_properties(${PROJECT_NAME}_mav_wrench PROPERTIES OUTPUT_NAME mav_wrench PREFIX "")
 set_target_properties(${PROJECT_NAME}_mav_wind PROPERTIES OUTPUT_NAME mav_wind PREFIX "")
+set_target_properties(${PROJECT_NAME}_mav_imu PROPERTIES OUTPUT_NAME mav_imu PREFIX "")
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -165,6 +167,7 @@ set_target_properties(${PROJECT_NAME}_mav_wind PROPERTIES OUTPUT_NAME mav_wind P
 target_link_libraries(${PROJECT_NAME}_mav_dynamics ${catkin_LIBRARIES})
 target_link_libraries(${PROJECT_NAME}_mav_wrench ${catkin_LIBRARIES})
 target_link_libraries(${PROJECT_NAME}_mav_wind ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_mav_imu ${catkin_LIBRARIES})
 
 #############
 ## Install ##
