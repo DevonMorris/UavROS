@@ -30,7 +30,7 @@ class PlotWrapper:
                  'u',       'v',        'w',
                  ['p', 'p_gyro'],       ['q', 'q_gyro'],      ['r', 'r_gyro'],
                  'ax',     'ay',        'az',
-                 ['Va', 'Va_c'], ['chi', 'chi_c'], ['p_diff', 'p_abs'] ]
+                 ['Va', 'Va_c'], ['chi', 'chi_c', 'chi_gps'], ['p_diff', 'p_abs'] ]
 
         self.wind = np.zeros(3)
         self.crab = 0.0
@@ -64,7 +64,9 @@ class PlotWrapper:
         rospy.Subscriber('twist', TwistStamped, self.velocity_cb_)
         rospy.Subscriber('imu', Imu, self.imu_cb_)
         rospy.Subscriber('Va_c', Float32, self.va_cb_)
-        rospy.Subscriber('gps', Vector3Stamped, self.gps_cb_)
+        rospy.Subscriber('gps_neh', Vector3Stamped, self.gps_neh_cb_)
+        rospy.Subscriber('gps_chi', Float32, self.gps_chi_cb_)
+        rospy.Subscriber('gps_vg', Float32, self.gps_vg_cb_)
         rospy.Subscriber('h_c', Float32, self.h_cb_)
         rospy.Subscriber('chi_c', Float32, self.chi_cb_)
         rospy.Subscriber('p_diff', Float32, self.p_diff_cb_)
@@ -126,7 +128,18 @@ class PlotWrapper:
         self.plotter.add_measurement('Va_c', msg.data, t)
         self.va_c = msg.data
 
-    def gps_cb_(self, msg):
+    def gps_neh_cb_(self, msg):
+        t = msg.header.stamp.to_sec()
+        
+        self.plotter.add_vector_measurement('neh_gps',
+                [msg.vector.x, msg.vector.y, msg.vector.z], t)
+
+    def gps_chi_cb_(self, msg):
+        # Extract time
+        t = rospy.Time.now().to_sec()
+        self.plotter.add_measurement('chi_gps', msg.data, t, rad2deg=self.use_degrees)
+
+    def gps_vg_cb_(self, msg):
         pass
 
     def h_cb_(self, msg):
@@ -138,7 +151,7 @@ class PlotWrapper:
     def chi_cb_(self, msg):
         # Extract time
         t = rospy.Time.now().to_sec()
-        self.plotter.add_measurement('chi_c', msg.data, t)
+        self.plotter.add_measurement('chi_c', msg.data, t, rad2deg=self.use_degrees)
         self.chi_c = msg.data
 
     def pose(self):
@@ -161,7 +174,7 @@ class PlotWrapper:
         # Add angles and angular velocities
         self.plotter.add_vector_measurement('euler', euler, t, rad2deg=self.use_degrees)
 
-        self.plotter.add_measurement('chi', euler[2] + self.crab, t)
+        self.plotter.add_measurement('chi', euler[2] + self.crab, t, rad2deg=self.use_degrees)
 
     def tick(self):
         self.pose()
@@ -172,7 +185,7 @@ class PlotWrapper:
         if self.h_c is not None:
             self.plotter.add_measurement('h_c', self.h_c, t)
         if self.chi_c is not None:
-            self.plotter.add_measurement('chi_c', self.chi_c, t)
+            self.plotter.add_measurement('chi_c', self.chi_c, t, rad2deg=self.use_degrees)
 
 
 

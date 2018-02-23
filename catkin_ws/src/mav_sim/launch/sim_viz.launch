@@ -17,6 +17,7 @@
   <!--sensors -->
   <node name="mav_imu" pkg="mav_sim" type="mav_imu" ns="mav" output="screen"/>
   <node name="mav_pressure" pkg="mav_sim" type="mav_pressure" ns="mav" output="screen"/>
+  <node name="mav_gps" pkg="mav_sim" type="mav_gps" ns="mav" output="screen"/>
 
   <!--plotter-->
   <node name="mav_plotter" pkg="mav_utils" type="mav_plotter.py" ns="mav" output="screen"/>
