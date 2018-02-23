@@ -30,7 +30,7 @@ class PlotWrapper:
                  'u',       'v',        'w',
                  ['p', 'p_gyro'],       ['q', 'q_gyro'],      ['r', 'r_gyro'],
                  'ax',     'ay',        'az',
-                 ['Va', 'Va_pito', 'Va_c'], ['chi', 'chi_c'] ]
+                 ['Va', 'Va_c'], ['chi', 'chi_c'], ['p_diff', 'p_abs'] ]
 
         self.wind = np.zeros(3)
         self.crab = 0.0
@@ -67,6 +67,8 @@ class PlotWrapper:
         rospy.Subscriber('gps', Vector3Stamped, self.gps_cb_)
         rospy.Subscriber('h_c', Float32, self.h_cb_)
         rospy.Subscriber('chi_c', Float32, self.chi_cb_)
+        rospy.Subscriber('p_diff', Float32, self.p_diff_cb_)
+        rospy.Subscriber('p_static', Float32, self.p_static_cb_)
 
         self.va_c = None
         self.h_c = None
@@ -78,6 +80,14 @@ class PlotWrapper:
             self.tick()
             self.plotter.update_plots()
             rate.sleep()
+
+    def p_diff_cb_(self, msg):
+        t = rospy.Time.now().to_sec()
+        self.plotter.add_measurement('p_diff' ,msg.data, t)
+
+    def p_static_cb_(self, msg):
+        t = rospy.Time.now().to_sec()
+        self.plotter.add_measurement('p_abs' ,msg.data, t)
 
     def velocity_cb_(self, msg):
         # Extract time

@@ -9,9 +9,9 @@
 #include <tf_conversions/tf_eigen.h>
 
 #include <geometry_msgs/TwistStamped.h>
-#include <geometry_msgs/WrenchStamped.h>
+#include <geometry_msgs/Vector3Stamped.h>
 
-#include <sensor_msgs/Imu.h>
+#include <std_msgs/Float32.h>
 
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
@@ -20,30 +20,27 @@
 
 typedef Eigen::Matrix<float, 12, 1> Vector12f;
 
-namespace mav_imu
+namespace mav_pressure
 {
 
-class MavIMU
+class MavPressure
 {
 private:
   // Ros node handles, publishers and subscribers
   ros::NodeHandle nh_;
-  ros::Publisher imu_pub_;
+  ros::Publisher p_static_pub_;
+  ros::Publisher p_diff_pub_;
   ros::Subscriber twist_sub_;
-  ros::Subscriber wrench_sub_;
+  ros::Subscriber wind_sub_;
 
   ros::Time now;
 
   // callbacks for subs
   void twist_cb_(const geometry_msgs::TwistStampedConstPtr& msg);
-  void wrench_cb_(const geometry_msgs::WrenchStampedConstPtr& msg);
+  void wind_cb_(const geometry_msgs::Vector3StampedConstPtr& msg);
 
   // tf broadcaster
   tf::TransformListener tf_listener_;
-
-  // force and torques
-  Eigen::Vector3f force;
-  Eigen::Vector3f omega;
 
   // params
   mav_params::MavParams params_;
@@ -53,18 +50,20 @@ private:
   std::mt19937 gen;
   std::normal_distribution<> d;
 
+  // wind and body velocities
+  Eigen::Vector3f wind;
+  Eigen::Vector3f vel;
+
   // noise params for acc/gyro
-  float sig_ax;
-  float sig_ay;
-  float sig_az;
-  float sig_p;
-  float sig_q;
-  float sig_r;
+  float sig_abs;
+  float b_abs;
+  float sig_diff;
+  float b_diff;
   
 public:
-  MavIMU();
+  MavPressure();
   void tick();
 
-}; //end class MavIMU
+}; //end class MavPressure
 
 } //end namespace
