@@ -22,7 +22,7 @@ namespace mav_gps
 
     twist_sub_ = nh_.subscribe("/mav/twist", 5, &MavGPS::twist_cb_, this);
 
-    k_gps = 1.0/1100.0;
+    k_gps = 1.0/11000.0;
     sig_n = .21;
     sig_e = .21;
     sig_h = .4;
