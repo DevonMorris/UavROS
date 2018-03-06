@@ -6,7 +6,7 @@ int main(int argc, char **argv){
   ros::init(argc, argv, "sensor_lpf");
 
   // instantiate TFViewer object
-  mav_controller::MavController controller;
+  lpf::LPF sensor_lpf;
 
   while(ros::ok()){
     ros::spin();

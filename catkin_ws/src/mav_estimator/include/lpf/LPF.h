@@ -59,20 +59,20 @@ private:
 
   Eigen::Vector3f acc1;
   Eigen::Vector3f gyro1;
-  Eigen::Vector3f gps1;
+  Eigen::Vector3f gps_neh1;
   float h1;
   float Va1;
-  float Vg1;
-  float chi1;
+  float gps_Vg1;
+  float gps_chi1;
 
   // alpha params
-  alpha_acc;
-  alpha_gyro;
-  alpha_gps_neh;
-  alpha_h;
-  alpha_Va;
-  alpha_Vg;
-  alpha_chi;
+  float alpha_acc;
+  float alpha_gyro;
+  float alpha_gps_neh;
+  float alpha_h;
+  float alpha_Va;
+  float alpha_Vg;
+  float alpha_chi;
 
   // sgn function
   mav_params::MavParams p_;
