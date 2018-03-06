@@ -31,11 +31,11 @@ namespace lpf
     Va_lpf_pub_ = nh_.advertise<std_msgs::Float32>("/mav/Va_lpf", 5);
     h_lpf_pub_ = nh_.advertise<std_msgs::Float32>("/mav/h_lpf", 5);
 
-    alpha_acc = .9;
-    alpha_gyro = .9;
+    alpha_acc = .1;
+    alpha_gyro = .1;
     alpha_gps_neh = .9;
     alpha_h = .9;
-    alpha_Va = .9;
+    alpha_Va = .999;
     alpha_Vg = .9;
     alpha_chi = .9;
   }
@@ -52,6 +52,7 @@ namespace lpf
     gyro1 = lpf1(gyro1, gyro, alpha_gyro);
 
     sensor_msgs::Imu msg_o;
+    msg_o.header = msg->header;
     msg_o.linear_acceleration.x = acc1(0);
     msg_o.linear_acceleration.y = acc1(1);
     msg_o.linear_acceleration.z = acc1(2);

@@ -26,7 +26,7 @@ class PlotWrapper:
 
         # Define plot names
         plots =  [['n', 'n_gps'],      ['e', 'e_gps'],        ['h', 'h_gps', 'h_c'],
-                 'phi',     'theta',  'psi',
+                 ['phi', 'phi_hat'],     ['theta', 'theta_hat'],  ['psi', 'psi_hat'],
                  'u',       'v',        'w',
                  ['p', 'p_gyro'],       ['q', 'q_gyro'],      ['r', 'r_gyro'],
                  'ax',     'ay',        'az',
@@ -59,10 +59,11 @@ class PlotWrapper:
         self.plotter.define_input_vector('neh_gps', ['n_gps', 'e_gps', 'h_gps'])
         self.plotter.define_input_vector('ang_gyro', ['p_gyro', 'q_gyro', 'r_gyro'])
         self.plotter.define_input_vector('acc', ['ax', 'ay', 'az'])
+        self.plotter.define_input_vector('euler_est', ['phi_hat', 'theta_hat', 'psi_hat'])
 
         # Subscribe to relevant ROS topics
         rospy.Subscriber('twist', TwistStamped, self.velocity_cb_)
-        rospy.Subscriber('imu', Imu, self.imu_cb_)
+        rospy.Subscriber('imu_lpf', Imu, self.imu_cb_)
         rospy.Subscriber('Va_c', Float32, self.va_cb_)
         rospy.Subscriber('gps_neh', Vector3Stamped, self.gps_neh_cb_)
         rospy.Subscriber('gps_chi', Float32, self.gps_chi_cb_)
@@ -71,6 +72,7 @@ class PlotWrapper:
         rospy.Subscriber('chi_c', Float32, self.chi_cb_)
         rospy.Subscriber('p_diff', Float32, self.p_diff_cb_)
         rospy.Subscriber('p_static', Float32, self.p_static_cb_)
+        rospy.Subscriber('euler_est', Vector3Stamped, self.euler_est_cb_)
 
         self.va_c = None
         self.h_c = None
@@ -120,7 +122,7 @@ class PlotWrapper:
                 [acc.x, acc.y, acc.z], t)
 
         self.plotter.add_vector_measurement('ang_gyro',
-                [gyro.x, gyro.y, gyro.z], t, rad2deg=self.use_degrees)
+                [gyro.x , gyro.y, gyro.z], t, rad2deg=self.use_degrees)
 
     def va_cb_(self, msg):
         # Extract time
@@ -153,6 +155,12 @@ class PlotWrapper:
         t = rospy.Time.now().to_sec()
         self.plotter.add_measurement('chi_c', msg.data, t, rad2deg=self.use_degrees)
         self.chi_c = msg.data
+
+    def euler_est_cb_(self, msg):
+        # Extract time
+        t = msg.header.stamp.to_sec()
+        self.plotter.add_vector_measurement('euler_est',
+                [msg.vector.x, msg.vector.y, msg.vector.z], t, rad2deg=self.use_degrees)
 
     def pose(self):
         try:

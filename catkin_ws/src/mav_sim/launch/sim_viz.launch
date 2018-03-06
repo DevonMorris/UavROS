@@ -21,6 +21,7 @@
 
   <!--estimator-->
   <node name="lpf" pkg="mav_estimator" type="lpf" ns="mav" output="screen"/>
+  <node name="mav_EKF" pkg="mav_estimator" type="mav_EKF" ns="mav" output="screen"/>
 
   <!--plotter-->
   <node name="mav_plotter" pkg="mav_utils" type="mav_plotter.py" ns="mav" output="screen"/>

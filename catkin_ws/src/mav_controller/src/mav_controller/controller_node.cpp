@@ -3,7 +3,7 @@
 
 int main(int argc, char **argv){
   // start node
-  ros::init(argc, argv, "mav_dynamics");
+  ros::init(argc, argv, "mav_controller");
 
   // instantiate TFViewer object
   mav_controller::MavController controller;
