@@ -64,6 +64,8 @@ private:
   float Va_est;
   float chi_lpf;
 
+  float Va_diff;
+
   // mav state for publishing
   Eigen::Vector3f euler_est;
 
@@ -73,6 +75,9 @@ private:
 
   /*
    * Attitude estimation (see section 8.6 uav book)
+   * state vector [phi, theta]
+   * input gyro
+   * measurement accel
    */
 
   // Filter states for att estimation (roll, pitch)
@@ -92,11 +97,48 @@ private:
   Eigen::Matrix2f Q_att;
   Eigen::Matrix3f R_att;
 
-  // sgn function
+
+  /*
+   * GPS Smoother (see section 8.7 uav book)
+   * state vector [p_n, p_e, V_g, chi, psi]
+   * input vector [V_a, q, r, phi, theta]
+   * measurement [p_n, p_e, V_g, chi]
+   */
+
+  // Filter states for GPS smoother
+  Eigen::Matrix<float, 5, 1> gps_smooth_est;
+  Eigen::Matrix<float, 5, 7> P_gps;
+
+  // Dynamics for gps smoother
+  Eigen::Matrix<float, 5, 1> f_gps(Eigen::Matrix<float, 5, 1> gps_est);
+  Eigen::Matrix<float, 4, 1> h_gps(Eigen::Matrix<float, 5, 1> gps_est);
+  Eigen::Matrix<float, 5, 5> dP_gps(Eigen::Matrix<float, 5, 5>,
+      Eigen::Matrix<float, 5, 5>);
+
+  // Jacobians for gps smoother
+  Eigen::Matrix<float, 5, 5> dfdx_gps(Eigen::Matrix<float, 5, 1> gps_est);
+  Eigen:::Matrix<float, 5, 4> dhdx_gps(Eigen::Matrix<float, 5, 1> gps_est);
+
+  //Covariances for gps smoother
+  Eigen::Matrix2f Q_gps;
+  Eigen::Matrix3f R_gps;
+
+  // mav params
   mav_params::MavParams p_;
 
   // RK4 integration
   void RK4_att(float dt);
+  void RK4_gps(float dt);
+
+  template <class T>
+  T wrap(T x)
+  {
+    while (x > M_PI)
+      x -= T(2*M_PI);
+    while (x < -M_PI)
+      x += T(2*M_PI);
+    return x;
+  }
 
 public:
   MavEKF();

@@ -10,6 +10,7 @@ namespace lpf
 
     // initialize member variables to zero
     acc1 = Eigen::Vector3f::Zero();
+    acc1(2) = -p_.g;
     gyro1 = Eigen::Vector3f::Zero();
     h1 = 0;
     Va1 = 0;
@@ -31,13 +32,13 @@ namespace lpf
     Va_lpf_pub_ = nh_.advertise<std_msgs::Float32>("/mav/Va_lpf", 5);
     h_lpf_pub_ = nh_.advertise<std_msgs::Float32>("/mav/h_lpf", 5);
 
-    alpha_acc = .1;
-    alpha_gyro = .1;
-    alpha_gps_neh = .9;
-    alpha_h = .9;
-    alpha_Va = .999;
-    alpha_Vg = .9;
-    alpha_chi = .9;
+    alpha_acc = .9;
+    alpha_gyro = .9;
+    alpha_gps_neh = .1;
+    alpha_h = .1;
+    alpha_Va = .95;
+    alpha_Vg = .1;
+    alpha_chi = .1;
   }
 
   void LPF::imu_cb_(const sensor_msgs::ImuConstPtr& msg)

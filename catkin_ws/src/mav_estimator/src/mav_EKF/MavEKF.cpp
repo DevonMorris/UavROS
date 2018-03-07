@@ -22,14 +22,15 @@ namespace mav_EKF
     att_est = Eigen::Vector2f::Zero(); 
     gyro = Eigen::Vector3f::Zero();
     acc = Eigen::Vector3f::Zero();
+    acc(2) = -p_.g;
 
-    Q_att << 0.05, 0.0,
-             0.0, 0.05;
-    R_att << 1.0, 0.0, 0.0,
-             0.0, 1.0, 0.0,
-             0.0, 0.0, 1.0;
+    Q_att << 1e-7, 0.0,
+             0.0, 1e-7;
+    R_att << std::pow(.0025*p_.g,2), 0.0, 0.0,
+             0.0, std::pow(0.025*p_.g,2), 0.0,
+             0.0, 0.0, std::pow(0.025*p_.g,2);
               
-    Va_est = 10.;
+    Va_est = 30.;
   }
 
   // Actually I need to do EKF updates here
@@ -45,6 +46,7 @@ namespace mav_EKF
 
   void MavEKF::Va_lpf_cb_(const std_msgs::Float32ConstPtr& msg)
   {
+    Va_diff = Va_est - msg->data;
     Va_est = msg->data;
   }
 
@@ -69,10 +71,11 @@ namespace mav_EKF
     auto S = R_att + H*P_att*H.transpose();
     auto K = P_att*H.transpose()*S.inverse();
 
-    ROS_WARN_STREAM("acc_norm " << acc.norm());
-    if (acc.norm() < 1.2*p_.g && acc.norm() > 0.8*p_.g)
+    if (acc.norm() < 1.2*p_.g && acc.norm() > .8*p_.g)
     {
       att_est += K*res;
+      att_est(0) = wrap(att_est(0));
+      att_est(1) = wrap(att_est(1));
       Eigen::Matrix2f I = Eigen::Matrix2f::Identity();
       // Joseph form
       P_att = (I - K*H)*P_att*(I - K*H).transpose() + K*R_att*K.transpose();
@@ -132,12 +135,9 @@ namespace mav_EKF
     float phi = att(0); float theta = att(1);
 
     Eigen::Matrix<float, 3, 2> dhdx;
-    dhdx << 0,
-         q*Va_est*std::cos(theta) + p_.g*std::cos(theta),
-         -p_.g*std::cos(phi)*std::sin(theta),
-         -r*Va_est*std::sin(theta) - p*Va_est*std::cos(theta) + p_.g*std::sin(phi)*std::sin(theta),
-         p_.g*std::sin(phi)*std::cos(theta),
-         (q*Va_est + p_.g*std::cos(phi))*std::sin(theta);
+    dhdx << 0, q*Va_est*std::cos(theta) + p_.g*std::cos(theta),
+         -p_.g*std::cos(phi)*std::cos(theta), -r*Va_est*std::sin(theta) - p*Va_est*std::cos(theta) + p_.g*std::sin(phi)*std::sin(theta),
+         p_.g*std::sin(phi)*std::cos(theta), (q*Va_est + p_.g*std::cos(phi))*std::sin(theta);
 
    return dhdx;
   }

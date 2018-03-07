@@ -8,7 +8,7 @@ int main(int argc, char **argv){
   // instantiate TFViewer object
   mav_EKF::MavEKF EKF;
 
-  ros::Rate r(250);
+  ros::Rate r(100);
   while(ros::ok()){
     EKF.tick();
     ros::spinOnce();

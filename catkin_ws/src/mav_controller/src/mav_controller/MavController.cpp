@@ -167,7 +167,7 @@ namespace mav_controller
     kp_h = .0114;
     ki_h = .0039;
 
-    kp_phi = sgn(a_phi2)*3*1.0/3.0;
+    kp_phi = sgn(a_phi2)*2*1.0/3.0;
     float wn_phi = std::sqrt(kp_phi*a_phi2);
     kd_phi = (2*2*wn_phi - a_phi1)/a_phi2 + .5;
     ki_phi = 0.01;
@@ -210,19 +210,21 @@ namespace mav_controller
     float theta_c;
 
     // above altitude hold
-    if (h > h_c + h_hold)
-    {
-      command.delt = 0.2;
-      command.dele = kp_v2*(Va_c - V_a);
-    }
+    //if (h > h_c + h_hold)
+    //{
+    //  command.delt = 0.0;
+    //  command.dele = kp_v2*(Va_c - V_a);
+    //  command.dele = saturate(command.dele, -.1, .1);
+    //}
     // altitude hold zone
-    else if (h > h_takeoff)
+    //else if (h > h_takeoff)
+    if ( h > h_takeoff)
     {
       // elevator control
       float e_h = h_c - h;
-      e_h = saturate(e_h, -25, 25);
+      e_h = saturate(e_h, -10, 30);
       theta_c = kp_h*(e_h);
-      e_h = saturate(e_h, -1, 1);
+      e_h = saturate(e_h, -0.5, 0.5);
       int_h += (e_h)*dt;
       theta_c += ki_h*int_h;
       command.dele = kp_theta*(theta_c - mav_state(4)) - kd_theta*mav_state(10);
