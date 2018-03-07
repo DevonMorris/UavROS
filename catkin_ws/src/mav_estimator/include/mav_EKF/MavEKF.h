@@ -99,29 +99,29 @@ private:
 
 
   /*
-   * GPS Smoother (see section 8.7 uav book)
+   * GPS Smoother (see Dr. McLain's simplified gps smoother)
    * state vector [p_n, p_e, V_g, chi, psi]
    * input vector [V_a, q, r, phi, theta]
    * measurement [p_n, p_e, V_g, chi]
    */
 
   // Filter states for GPS smoother
-  Eigen::Matrix<float, 5, 1> gps_smooth_est;
-  Eigen::Matrix<float, 5, 7> P_gps;
+  Eigen::Matrix<float, 5, 1> gps_est;
+  Eigen::Matrix<float, 5, 5> P_gps;
 
   // Dynamics for gps smoother
   Eigen::Matrix<float, 5, 1> f_gps(Eigen::Matrix<float, 5, 1> gps_est);
   Eigen::Matrix<float, 4, 1> h_gps(Eigen::Matrix<float, 5, 1> gps_est);
-  Eigen::Matrix<float, 5, 5> dP_gps(Eigen::Matrix<float, 5, 5>,
-      Eigen::Matrix<float, 5, 5>);
+  Eigen::Matrix<float, 5, 5> dP_gps(Eigen::Matrix<float, 5, 5> P,
+      Eigen::Matrix<float, 5, 5> A);
 
   // Jacobians for gps smoother
   Eigen::Matrix<float, 5, 5> dfdx_gps(Eigen::Matrix<float, 5, 1> gps_est);
-  Eigen:::Matrix<float, 5, 4> dhdx_gps(Eigen::Matrix<float, 5, 1> gps_est);
+  Eigen::Matrix<float, 4, 5> dhdx_gps(Eigen::Matrix<float, 5, 1> gps_est);
 
   //Covariances for gps smoother
-  Eigen::Matrix2f Q_gps;
-  Eigen::Matrix3f R_gps;
+  Eigen::Matrix<float, 5, 5> Q_gps;
+  Eigen::Matrix<float, 4, 4> R_gps;
 
   // mav params
   mav_params::MavParams p_;

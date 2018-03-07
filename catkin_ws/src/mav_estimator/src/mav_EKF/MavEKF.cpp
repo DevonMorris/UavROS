@@ -160,6 +160,102 @@ namespace mav_EKF
     P_att += dt*(k1_P_att + 2.*k2_P_att + 2.*k3_P_att + k4_P_att)/6.;
   }
 
+  Eigen::Matrix<float, 5, 1> MavEKF::f_gps(Eigen::Matrix<float, 5, 1> gps_est)
+  {
+    // state
+    float pn = gps_est(0); float pe = gps_est(1); float Vg = gps_est(2);
+    float chi = gps_est(3); float psi = gps_est(4);
+
+    // input
+    float Va = Va_est; float q = gyro(1); float r = gyro(2);
+    float phi = att_est(0); float theta = att_est(1);
+
+    float psi_d = q*std::sin(phi)/std::cos(theta) + r*std::cos(phi)/std::cos(theta);
+    
+    Eigen::Matrix<float, 5, 1> fx;
+    fx << Vg*std::cos(chi),
+          Vg*std::sin(chi),
+          psi_d*Va*std::sin(chi - psi),
+          p_.g*std::tan(phi)*std::cos(chi - psi)/Vg,
+          q*std::sin(phi)/std::cos(theta) + r*std::cos(phi)/std::cos(theta);
+
+    return fx;
+  }
+
+  Eigen::Matrix<float, 4, 1> MavEKF::h_gps(Eigen::Matrix<float, 5, 1> gps_est)
+  {
+    // state
+    float pn = gps_est(0); float pe = gps_est(1); float Vg = gps_est(2);
+    float chi = gps_est(3); float psi = gps_est(4);
+
+    Eigen::Matrix<float, 4, 1> hx;
+    hx << pn, pe, Vg, chi;
+
+    return hx;
+  }
+
+  Eigen::Matrix<float, 5, 5> MavEKF::dP_gps(Eigen::Matrix<float, 5, 5> P, Eigen::Matrix<float, 5, 5> A)
+  {
+    Eigen::Matrix<float, 5, 5> dP = A*P + P*A.transpose() + Q_gps;
+    return dP;
+  }
+
+  Eigen::Matrix<float, 5, 5> MavEKF::dfdx_gps(Eigen::Matrix<float, 5, 1> gps_est)
+  {
+    // state
+    float pn = gps_est(0); float pe = gps_est(1); float Vg = gps_est(2);
+    float chi = gps_est(3); float psi = gps_est(4);
+
+    // input
+    float Va = Va_est; float q = gyro(1); float r = gyro(2);
+    float phi = att_est(0); float theta = att_est(1);
+
+    // approximate derivatives
+    float wn = Vg*std::cos(chi) - Va*std::cos(psi);
+    float we = Vg*std::sin(chi) - Va*std::sin(psi);
+    float psi_d = q*std::sin(phi)/std::cos(theta) + r*std::cos(phi)/std::cos(theta);
+    float Vg_d = ((Va*std::cos(psi) + wn)*(-Va*psi_d*std::sin(psi)) +
+        (Va*std::sin(psi) + we)*(Va*psi_d*std::cos(psi)))/Vg;
+
+    Eigen::Matrix<float, 5, 5> dfdx;
+    dfdx << 0., 0., std::cos(chi), -Vg*std::sin(chi), 0.,
+            0., 0., std::sin(chi), Vg*std::cos(chi), 0.,
+            0., 0., -Vg_d/Vg, psi_d*Va*std::cos(chi - psi), -psi_d*Va*std::cos(chi - psi),
+            0., 0., -p_.g*std::tan(phi)*std::cos(chi - psi)/std::pow(Vg, 2), -p_.g*std::tan(phi)*std::sin(chi - psi)/Vg, p_.g*std::tan(phi)*std::sin(chi - psi),
+            0., 0., 0., 0., 0.;
+
+    return dfdx;
+  }
+
+  Eigen::Matrix<float, 4, 5> MavEKF::dhdx_gps(Eigen::Matrix<float, 5, 1> gps_est)
+  {
+    Eigen::Matrix<float, 4, 5> dhdx;
+    dhdx << 1., 0., 0., 0., 0.,
+            0., 1., 0., 0., 0.,
+            0., 0., 1., 0., 0.,
+            0., 0., 0., 1., 0.;
+    return dhdx;
+  }
+
+  void MavEKF::RK4_gps(float dt)
+  {
+    auto k1_gps = f_gps(gps_est);
+    auto k1_P_gps = dP_gps(P_gps, dfdx_gps(gps_est));
+
+    auto k2_gps = f_gps(gps_est + dt*k1_gps/2.);
+    auto k2_P_gps = dP_gps(P_gps + dt/2.*k1_P_gps, dfdx_gps(gps_est + dt*k1_gps/2.));
+
+    auto k3_gps = f_gps(gps_est + dt*k2_gps/2.);
+    auto k3_P_gps = dP_gps(P_gps + dt/2.*k2_P_gps, dfdx_gps(gps_est + dt*k2_gps/2.));
+
+    auto k4_gps = f_gps(gps_est + dt*k3_gps);
+    auto k4_P_gps = dP_gps(P_gps + dt*k3_P_gps, dfdx_gps(gps_est + dt*k3_gps));
+
+    gps_est += dt*(k1_gps + 2.*k2_gps + 2.*k3_gps + k4_gps)/6.;
+    P_gps += dt*(k1_P_gps + 2.*k2_P_gps + 2.*k3_P_gps + k4_P_gps)/6.;
+  }
+
+
   void MavEKF::tick()
   {
     // predict forward everything!!!!!!
@@ -167,11 +263,13 @@ namespace mav_EKF
     now = ros::Time::now();
 
     RK4_att(dt);
+    RK4_gps(dt);
+
     geometry_msgs::Vector3Stamped msg_euler;
     msg_euler.header.stamp = now;
     msg_euler.vector.x = att_est(0);
     msg_euler.vector.y = att_est(1);
-    msg_euler.vector.z = 0.0;
+    msg_euler.vector.z = gps_est(4);
     euler_est_pub_.publish(msg_euler);
 
   }
