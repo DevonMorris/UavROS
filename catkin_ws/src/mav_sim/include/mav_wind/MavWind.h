@@ -9,7 +9,7 @@
 #include <tf_conversions/tf_eigen.h>
 
 #include <geometry_msgs/Twist.h>
-#include <geometry_msgs/Vector3.h>
+#include <geometry_msgs/Vector3Stamped.h>
 
 #include <Eigen/Dense>
 #include <Eigen/Geometry>

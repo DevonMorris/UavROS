@@ -12,7 +12,7 @@
   <node name="mav_dynamics" pkg="mav_sim" type="mav_dynamics" ns="mav" output="screen"/>
   <node name="mav_wrench" pkg="mav_sim" type="mav_wrench" ns="mav" output="screen"/>
   <node name="mav_controller" pkg="mav_controller" type="mav_controller" ns="mav" output="screen"/>
-  <!--<node name="mav_wind" pkg="mav_sim" type="mav_wind" ns="mav" output="screen"/>-->
+  <node name="mav_wind" pkg="mav_sim" type="mav_wind" ns="mav" output="screen"/>
 
   <!--sensors -->
   <node name="mav_imu" pkg="mav_sim" type="mav_imu" ns="mav" output="screen"/>

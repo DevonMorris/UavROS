@@ -25,12 +25,12 @@ class PlotWrapper:
         self.plotter = Plotter()
 
         # Define plot names
-        plots =  [['n', 'n_gps'],      ['e', 'e_gps'],        ['h', 'h_gps', 'h_c'],
+        plots =  [['n', 'n_hat', 'n_gps'], ['e', 'e_hat', 'e_gps'], ['h', 'h_hat', 'h_gps', 'h_c'],
                  ['phi', 'phi_hat'],     ['theta', 'theta_hat'],  ['psi', 'psi_hat'],
                  'u',       'v',        'w',
-                 ['p', 'p_gyro'],       ['q', 'q_gyro'],      ['r', 'r_gyro'],
+                 ['p', 'p_hat', 'p_gyro'], ['q', 'q_hat', 'q_gyro'], ['r', 'r_hat', 'r_gyro'],
                  'ax',     'ay',        'az',
-                 ['Va', 'Va_c'], ['chi', 'chi_c', 'chi_gps'], ['p_diff', 'p_abs'] ]
+                 ['Va', 'Va_c'], ['chi', 'chi_hat', 'chi_c', 'chi_gps'], ['p_diff', 'p_abs'] ]
 
         self.wind = np.zeros(3)
         self.crab = 0.0
@@ -60,6 +60,7 @@ class PlotWrapper:
         self.plotter.define_input_vector('ang_gyro', ['p_gyro', 'q_gyro', 'r_gyro'])
         self.plotter.define_input_vector('acc', ['ax', 'ay', 'az'])
         self.plotter.define_input_vector('euler_est', ['phi_hat', 'theta_hat', 'psi_hat'])
+        self.plotter.define_input_vector('neh_est', ['n_hat', 'e_hat', 'h_hat'])
 
         # Subscribe to relevant ROS topics
         rospy.Subscriber('twist', TwistStamped, self.velocity_cb_)
@@ -73,6 +74,8 @@ class PlotWrapper:
         rospy.Subscriber('p_diff', Float32, self.p_diff_cb_)
         rospy.Subscriber('p_static', Float32, self.p_static_cb_)
         rospy.Subscriber('euler_est', Vector3Stamped, self.euler_est_cb_)
+        rospy.Subscriber('ned_est', Vector3Stamped, self.ned_est_cb_)
+        rospy.Subscriber('chi_est', Float32, self.chi_est_cb_)
 
         self.va_c = None
         self.h_c = None
@@ -87,11 +90,16 @@ class PlotWrapper:
 
     def p_diff_cb_(self, msg):
         t = rospy.Time.now().to_sec()
-        self.plotter.add_measurement('p_diff' ,msg.data, t)
+        self.plotter.add_measurement('p_diff', msg.data, t)
+
+    def chi_est_cb_(self, msg):
+        t = rospy.Time.now().to_sec()
+        self.plotter.add_measurement('chi_hat', msg.data, t,
+                rad2deg=True)
 
     def p_static_cb_(self, msg):
         t = rospy.Time.now().to_sec()
-        self.plotter.add_measurement('p_abs' ,msg.data, t)
+        self.plotter.add_measurement('p_abs', msg.data, t)
 
     def velocity_cb_(self, msg):
         # Extract time
@@ -135,6 +143,12 @@ class PlotWrapper:
         
         self.plotter.add_vector_measurement('neh_gps',
                 [msg.vector.x, msg.vector.y, msg.vector.z], t)
+
+    def ned_est_cb_(self, msg):
+        t = msg.header.stamp.to_sec()
+        
+        self.plotter.add_vector_measurement('neh_est',
+                [msg.vector.x, msg.vector.y, -msg.vector.z], t)
 
     def gps_chi_cb_(self, msg):
         # Extract time

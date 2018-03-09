@@ -34,11 +34,11 @@ namespace lpf
 
     alpha_acc = .9;
     alpha_gyro = .9;
-    alpha_gps_neh = .1;
-    alpha_h = .1;
+    alpha_gps_neh = .9;
+    alpha_h = .9;
     alpha_Va = .95;
-    alpha_Vg = .1;
-    alpha_chi = .1;
+    alpha_Vg = .9;
+    alpha_chi = .9;
   }
 
   void LPF::imu_cb_(const sensor_msgs::ImuConstPtr& msg)

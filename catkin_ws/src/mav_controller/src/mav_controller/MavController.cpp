@@ -12,13 +12,27 @@ namespace mav_controller
     mav_state = Eigen::MatrixXf::Zero(12,1);
     trim_srv_ = nh_.serviceClient<mav_utils::Trim>("/mav/trim"); 
 
+    bool closed = true;
     // publishers and subscribes
-    h_sub_ = nh_.subscribe("/mav/h_c", 5, &MavController::h_cb_, this);
-    Va_sub_ = nh_.subscribe("/mav/Va_c", 5, &MavController::Va_cb_, this);
-    Chi_sub_ = nh_.subscribe("/mav/chi_c", 5, &MavController::Chi_cb_, this);
-    twist_sub_ = nh_.subscribe("/mav/twist", 5, &MavController::twist_cb_, this);
-    euler_sub_ = nh_.subscribe("/mav/euler", 5, &MavController::euler_cb_, this);
-    ned_sub_ = nh_.subscribe("/mav/ned", 5, &MavController::ned_cb_, this);
+    if (closed)
+    {
+      h_sub_ = nh_.subscribe("/mav/h_c", 5, &MavController::h_cb_, this);
+      Va_sub_ = nh_.subscribe("/mav/Va_c", 5, &MavController::Va_cb_, this);
+      Chi_sub_ = nh_.subscribe("/mav/chi_c", 5, &MavController::Chi_cb_, this);
+      chi_est_sub_ = nh_.subscribe("/mav/chi_est", 5, &MavController::chi_est_cb_, this);
+      euler_sub_ = nh_.subscribe("/mav/euler_est", 5, &MavController::euler_cb_, this);
+      ned_sub_ = nh_.subscribe("/mav/ned_est", 5, &MavController::ned_cb_, this);
+      Va_est_sub_ = nh_.subscribe("/mav/Va_lpf", 5, &MavController::va_est_cb_, this);
+    }
+    else 
+    {
+      h_sub_ = nh_.subscribe("/mav/h_c", 5, &MavController::h_cb_, this);
+      Va_sub_ = nh_.subscribe("/mav/Va_c", 5, &MavController::Va_cb_, this);
+      Chi_sub_ = nh_.subscribe("/mav/chi_c", 5, &MavController::Chi_cb_, this);
+      twist_sub_ = nh_.subscribe("/mav/twist", 5, &MavController::twist_cb_, this);
+      euler_sub_ = nh_.subscribe("/mav/euler", 5, &MavController::euler_cb_, this);
+      ned_sub_ = nh_.subscribe("/mav/ned", 5, &MavController::ned_cb_, this);
+    }
 
     command_pub_ = nh_.advertise<mav_msgs::Command>("/mav/command", 5);
 
@@ -55,10 +69,26 @@ namespace mav_controller
     Chi_c = msg->data;
   }
 
+  void MavController::chi_est_cb_(const std_msgs::Float32ConstPtr& msg)
+  {
+    chi = msg->data;
+  }
+
+  void MavController::va_est_cb_(const std_msgs::Float32ConstPtr& msg)
+  {
+    V_a = msg->data;
+  }
+
   void MavController::twist_cb_(const geometry_msgs::TwistStampedConstPtr& msg)
   {
     mav_state(6) = msg->twist.linear.x; mav_state(7) = msg->twist.linear.y; mav_state(8) = msg->twist.linear.z;
     mav_state(9) = msg->twist.angular.x; mav_state(10) = msg->twist.angular.y; mav_state(11) = msg->twist.angular.z;
+
+    Eigen::Vector3f vel;
+    vel << mav_state(6), mav_state(7), mav_state(8);
+    V_a = vel.norm();
+    float beta = std::atan2(mav_state(7), mav_state(6));
+    chi = beta + mav_state(5);
   }
 
   void MavController::euler_cb_(const geometry_msgs::Vector3StampedConstPtr& msg)
@@ -148,18 +178,18 @@ namespace mav_controller
     a_beta2 = 0.5*p_.rho*p_.S*trim(0)*p_.C_Ydelr/p_.m;
 
     // calculate gains for pitch altitude hold
-    kp_theta = sgn(a_theta3)*.1/.1;
+    kp_theta = sgn(a_theta3)*.03/.1;
     float wn_theta = std::sqrt(a_theta2 + kp_theta*a_theta3);
-    kd_theta = (2*0.9*wn_theta - a_theta1)/a_theta3;
+    kd_theta = (3*0.9*wn_theta - a_theta1)/a_theta3;
     k_theta_DC = kp_theta*a_theta3/(a_theta2 + kp_theta*a_theta3);
     
     float wn_v2 = wn_theta/40.;
     ki_v2 = -std::pow(wn_v2,2)/(k_theta_DC*p_.g);
-    kp_v2 = std::abs((a_V1 - 2*.9*wn_v2)/(k_theta_DC*p_.g));
+    kp_v2 = 0.5*std::abs((a_V1 - 2*.9*wn_v2)/(k_theta_DC*p_.g));
 
     float wn_v = 2.2/2.0;
     ki_v = std::pow(wn_v,2)/a_V2; 
-    kp_v = std::abs((2.0*.8*wn_v - a_V1)/a_V2);
+    kp_v = 0.5*std::abs((2.0*.8*wn_v - a_V1)/a_V2);
 
     float wn_h = wn_theta/40.;
     ki_h = std::pow(wn_h,2)/(p_.Va*k_theta_DC);
@@ -167,13 +197,13 @@ namespace mav_controller
     kp_h = .0114;
     ki_h = .0039;
 
-    kp_phi = sgn(a_phi2)*2*1.0/3.0;
+    kp_phi = sgn(a_phi2)*1.0/3.0;
     float wn_phi = std::sqrt(kp_phi*a_phi2);
     kd_phi = (2*2*wn_phi - a_phi1)/a_phi2 + .5;
     ki_phi = 0.01;
     
     float wn_chi = wn_phi/8.0;
-    kp_chi = 2*.8*wn_chi*p_.Va/p_.g;
+    kp_chi = .5*.8*wn_chi*p_.Va/p_.g;
     ki_chi = std::pow(wn_chi,2)*p_.Va/p_.g;
 
     trimmed = true;
@@ -203,7 +233,6 @@ namespace mav_controller
      */
     Eigen::Vector3f vel;
     vel << mav_state(6), mav_state(7), mav_state(8);
-    float V_a = vel.norm();
 
     float h = -mav_state(2);
 
@@ -250,8 +279,6 @@ namespace mav_controller
 
     if (h > h_takeoff)
     {
-      float beta = std::atan2(mav_state(7), mav_state(6));
-      float chi = mav_state(5) + beta;
       // int_chi += dt*(Chi_c - chi);
       float e_chi = 0.0;
       float e_phi = 0.0;

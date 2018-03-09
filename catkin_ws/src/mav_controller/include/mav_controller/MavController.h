@@ -46,6 +46,8 @@ private:
   ros::Subscriber twist_sub_;
   ros::Subscriber euler_sub_;
   ros::Subscriber ned_sub_;
+  ros::Subscriber Va_est_sub_;
+  ros::Subscriber chi_est_sub_;
 
   ros::Publisher command_pub_;
   ros::ServiceClient trim_srv_;
@@ -57,6 +59,8 @@ private:
   void twist_cb_(const geometry_msgs::TwistStampedConstPtr& msg);
   void euler_cb_(const geometry_msgs::Vector3StampedConstPtr& msg);
   void ned_cb_(const geometry_msgs::Vector3StampedConstPtr& msg);
+  void chi_est_cb_(const std_msgs::Float32ConstPtr& msg);
+  void va_est_cb_(const std_msgs::Float32ConstPtr& msg);
 
   ros::Time now;
 
@@ -110,6 +114,8 @@ private:
 
   bool trimmed;
 
+  float V_a;
+  float chi;
 
 
   // command variables

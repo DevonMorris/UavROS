@@ -17,6 +17,13 @@ namespace mav_EKF
     gps_neh_lpf_sub_ = nh_.subscribe("/mav/gps_neh_lpf", 5, &MavEKF::gps_neh_lpf_cb_, this);
 
     euler_est_pub_ = nh_.advertise<geometry_msgs::Vector3Stamped>("/mav/euler_est" ,5);
+    ned_est_pub_ = nh_.advertise<geometry_msgs::Vector3Stamped>("/mav/ned_est" ,5);
+    chi_est_pub_ = nh_.advertise<std_msgs::Float32>("/mav/chi_est", 5);
+
+    P_gps = .1*Eigen::Matrix<float, 5, 5>::Identity();
+    gps_est = Eigen::Matrix<float, 5, 1>::Zero();
+    // Make groundspeed non-zero
+    gps_est(2) = 30.;
 
     P_att = 0.5*Eigen::Matrix2f::Identity();
     att_est = Eigen::Vector2f::Zero(); 
@@ -25,12 +32,17 @@ namespace mav_EKF
     acc(2) = -p_.g;
 
     Q_att << 1e-7, 0.0,
-             0.0, 1e-7;
+             0.0, 1e-9;
     R_att << std::pow(.0025*p_.g,2), 0.0, 0.0,
              0.0, std::pow(0.025*p_.g,2), 0.0,
              0.0, 0.0, std::pow(0.025*p_.g,2);
+
+    Q_gps = 1e-4*Eigen::Matrix<float, 5, 5>::Identity();
+    R_gps = std::pow(.21,2)*Eigen::Matrix<float, 5, 5>::Identity();
               
     Va_est = 30.;
+    chi_lpf = 0.;
+    Vg_lpf = 30.;
   }
 
   // Actually I need to do EKF updates here
@@ -46,7 +58,6 @@ namespace mav_EKF
 
   void MavEKF::Va_lpf_cb_(const std_msgs::Float32ConstPtr& msg)
   {
-    Va_diff = Va_est - msg->data;
     Va_est = msg->data;
   }
 
@@ -57,6 +68,30 @@ namespace mav_EKF
 
   void MavEKF::gps_vg_lpf_cb_(const std_msgs::Float32ConstPtr& msg)
   {
+    Vg_lpf = msg->data;
+  }
+
+  void MavEKF::gps_neh_lpf_cb_(const geometry_msgs::Vector3StampedConstPtr& msg)
+  {
+    // kalman update for gps smoother
+    Eigen::Matrix<float, 5, 1> y;
+    y << msg->vector.x, msg->vector.y, Vg_lpf, chi_lpf, chi_lpf;
+    auto y_hat = h_gps(gps_est);
+    Eigen::Matrix<float, 5, 1> res = y - y_hat;
+    auto H = dhdx_gps(gps_est);
+    auto S = R_gps + H*P_gps*H.transpose();
+    auto K = P_gps*H.transpose()*S.inverse();
+
+    res(3) = wrap(res(3));
+    res(4) = wrap(res(4));
+
+    // i'm pretty sure psi isn't observable...
+    gps_est += K*res;
+    gps_est(3) = wrap(gps_est(3));
+    gps_est(4) = wrap(gps_est(4));
+    Eigen::Matrix<float, 5, 5> I = Eigen::Matrix<float, 5, 5>::Identity();
+    // Joseph form
+    P_gps = (I - K*H)*P_gps*(I - K*H).transpose() + K*R_gps*K.transpose();
   }
 
   void MavEKF::imu_lpf_cb_(const sensor_msgs::ImuConstPtr& msg)
@@ -64,7 +99,7 @@ namespace mav_EKF
     gyro << msg->angular_velocity.x, msg->angular_velocity.y, msg->angular_velocity.z;
     acc << msg->linear_acceleration.x, msg->linear_acceleration.y, msg->linear_acceleration.z;
 
-    // Kalman update
+    // Kalman update attitude estimate
     Eigen::Vector3f acc_est = h_att(att_est);
     Eigen::Vector3f res = acc - acc_est;
     auto H = dhdx_att(att_est);
@@ -80,10 +115,6 @@ namespace mav_EKF
       // Joseph form
       P_att = (I - K*H)*P_att*(I - K*H).transpose() + K*R_att*K.transpose();
     }
-  }
-  
-  void MavEKF::gps_neh_lpf_cb_(const geometry_msgs::Vector3Stamped& msg)
-  {
   }
 
   Eigen::Vector2f MavEKF::f_att(Eigen::Vector2f att)
@@ -182,14 +213,14 @@ namespace mav_EKF
     return fx;
   }
 
-  Eigen::Matrix<float, 4, 1> MavEKF::h_gps(Eigen::Matrix<float, 5, 1> gps_est)
+  Eigen::Matrix<float, 5, 1> MavEKF::h_gps(Eigen::Matrix<float, 5, 1> gps_est)
   {
     // state
     float pn = gps_est(0); float pe = gps_est(1); float Vg = gps_est(2);
     float chi = gps_est(3); float psi = gps_est(4);
 
-    Eigen::Matrix<float, 4, 1> hx;
-    hx << pn, pe, Vg, chi;
+    Eigen::Matrix<float, 5, 1> hx;
+    hx << pn, pe, Vg, chi, psi;
 
     return hx;
   }
@@ -221,19 +252,20 @@ namespace mav_EKF
     dfdx << 0., 0., std::cos(chi), -Vg*std::sin(chi), 0.,
             0., 0., std::sin(chi), Vg*std::cos(chi), 0.,
             0., 0., -Vg_d/Vg, psi_d*Va*std::cos(chi - psi), -psi_d*Va*std::cos(chi - psi),
-            0., 0., -p_.g*std::tan(phi)*std::cos(chi - psi)/std::pow(Vg, 2), -p_.g*std::tan(phi)*std::sin(chi - psi)/Vg, p_.g*std::tan(phi)*std::sin(chi - psi),
+            0., 0., -p_.g*std::tan(phi)*std::cos(chi - psi)/std::pow(Vg, 2), -p_.g*std::tan(phi)*std::sin(chi - psi)/Vg, p_.g*std::tan(phi)*std::sin(chi - psi)/Vg,
             0., 0., 0., 0., 0.;
 
     return dfdx;
   }
 
-  Eigen::Matrix<float, 4, 5> MavEKF::dhdx_gps(Eigen::Matrix<float, 5, 1> gps_est)
+  Eigen::Matrix<float, 5, 5> MavEKF::dhdx_gps(Eigen::Matrix<float, 5, 1> gps_est)
   {
-    Eigen::Matrix<float, 4, 5> dhdx;
+    Eigen::Matrix<float, 5, 5> dhdx;
     dhdx << 1., 0., 0., 0., 0.,
             0., 1., 0., 0., 0.,
             0., 0., 1., 0., 0.,
-            0., 0., 0., 1., 0.;
+            0., 0., 0., 1., 0.,
+            0., 0., 0., 0., 1.;
     return dhdx;
   }
 
@@ -265,13 +297,29 @@ namespace mav_EKF
     RK4_att(dt);
     RK4_gps(dt);
 
+    // pack up mav state
+    euler_est << att_est(0), att_est(1), gps_est(4);
+    ned_est << gps_est(0), gps_est(1), -h_est;
+    // assume nominal velocity is along x axis
+    vel_est << gps_est(2), 0.0, 0.0;
+
     geometry_msgs::Vector3Stamped msg_euler;
     msg_euler.header.stamp = now;
-    msg_euler.vector.x = att_est(0);
-    msg_euler.vector.y = att_est(1);
-    msg_euler.vector.z = gps_est(4);
+    msg_euler.vector.x = euler_est(0);
+    msg_euler.vector.y = euler_est(1);
+    msg_euler.vector.z = euler_est(2);
     euler_est_pub_.publish(msg_euler);
 
+    geometry_msgs::Vector3Stamped msg_ned;
+    msg_ned.header.stamp = now;
+    msg_ned.vector.x = ned_est(0);
+    msg_ned.vector.y = ned_est(1);
+    msg_ned.vector.z = ned_est(2);
+    ned_est_pub_.publish(msg_ned);
+
+    std_msgs::Float32 msg_chi;
+    msg_chi.data = gps_est(3);
+    chi_est_pub_.publish(msg_chi);
   }
 
 }

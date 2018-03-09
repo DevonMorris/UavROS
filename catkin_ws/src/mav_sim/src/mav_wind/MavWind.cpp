@@ -9,7 +9,7 @@ namespace mav_wind
     d(0,1)
   {
     // publishers and subscribers
-    wind_pub_ = nh_.advertise<geometry_msgs::Vector3>("/mav/wind", 5);
+    wind_pub_ = nh_.advertise<geometry_msgs::Vector3Stamped>("/mav/wind", 5);
     steady_wind_sub_ = nh_.subscribe("/steady_wind", 5, &MavWind::steady_wind_cb_, this);
 
     // Initialize wind
@@ -67,10 +67,12 @@ namespace mav_wind
   void MavWind::tick()
   {
     calcWind();
-    geometry_msgs::Vector3 msg;
+    geometry_msgs::Vector3Stamped msg;
+
 
     // pack up message and publish
-    msg.x = wind_b(0); msg.y = wind_b(1); msg.z = wind_b(2);
+    msg.header.stamp = ros::Time::now();
+    msg.vector.x = wind_b(0); msg.vector.y = wind_b(1); msg.vector.z = wind_b(2);
     wind_pub_.publish(msg);
   }
 

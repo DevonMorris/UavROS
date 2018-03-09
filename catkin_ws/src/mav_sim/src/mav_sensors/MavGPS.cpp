@@ -64,14 +64,6 @@ namespace mav_gps
     float e = tf_bw.getOrigin().getY() + nu_e;
     float h = -tf_bw.getOrigin().getZ() + nu_h;
 
-    // pack up neh msg and publish
-    geometry_msgs::Vector3Stamped msg_gps_neh;
-    msg_gps_neh.header.stamp = now;
-    msg_gps_neh.vector.x = n;
-    msg_gps_neh.vector.y = e;
-    msg_gps_neh.vector.z = h;
-    gps_neh_pub_.publish(msg_gps_neh);
-
     // convert rotation into eigen and rotate velocity into correct frame
     tf::quaternionTFToEigen(tf_vb.getRotation(), R_vb);
     vel = R_vb.cast<float>()*vel;
@@ -88,6 +80,14 @@ namespace mav_gps
 
     gps_vg_pub_.publish(msg_gps_vg);
     gps_chi_pub_.publish(msg_gps_chi);
+
+    // pack up neh msg and publish
+    geometry_msgs::Vector3Stamped msg_gps_neh;
+    msg_gps_neh.header.stamp = now;
+    msg_gps_neh.vector.x = n;
+    msg_gps_neh.vector.y = e;
+    msg_gps_neh.vector.z = h;
+    gps_neh_pub_.publish(msg_gps_neh);
   }
 
 

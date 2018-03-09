@@ -49,13 +49,14 @@ private:
   ros::Publisher ned_est_pub_;
   ros::Publisher euler_est_pub_;
   ros::Publisher twist_est_pub_;
+  ros::Publisher chi_est_pub_;
 
   // callbacks for subscribers
   void h_lpf_cb_(const std_msgs::Float32ConstPtr& msg);
   void Va_lpf_cb_(const std_msgs::Float32ConstPtr& msg);
   void gps_vg_lpf_cb_(const std_msgs::Float32ConstPtr& msg);
   void gps_chi_lpf_cb_(const std_msgs::Float32ConstPtr& msg);
-  void gps_neh_lpf_cb_(const geometry_msgs::Vector3Stamped& msg);
+  void gps_neh_lpf_cb_(const geometry_msgs::Vector3StampedConstPtr& msg);
   void imu_lpf_cb_(const sensor_msgs::ImuConstPtr& msg);
 
   ros::Time now;
@@ -63,11 +64,12 @@ private:
   float h_est;
   float Va_est;
   float chi_lpf;
-
-  float Va_diff;
+  float Vg_lpf;
 
   // mav state for publishing
   Eigen::Vector3f euler_est;
+  Eigen::Vector3f ned_est;
+  Eigen::Vector3f vel_est;
 
   // states for imu
   Eigen::Vector3f gyro;
@@ -111,17 +113,17 @@ private:
 
   // Dynamics for gps smoother
   Eigen::Matrix<float, 5, 1> f_gps(Eigen::Matrix<float, 5, 1> gps_est);
-  Eigen::Matrix<float, 4, 1> h_gps(Eigen::Matrix<float, 5, 1> gps_est);
+  Eigen::Matrix<float, 5, 1> h_gps(Eigen::Matrix<float, 5, 1> gps_est);
   Eigen::Matrix<float, 5, 5> dP_gps(Eigen::Matrix<float, 5, 5> P,
       Eigen::Matrix<float, 5, 5> A);
 
   // Jacobians for gps smoother
   Eigen::Matrix<float, 5, 5> dfdx_gps(Eigen::Matrix<float, 5, 1> gps_est);
-  Eigen::Matrix<float, 4, 5> dhdx_gps(Eigen::Matrix<float, 5, 1> gps_est);
+  Eigen::Matrix<float, 5, 5> dhdx_gps(Eigen::Matrix<float, 5, 1> gps_est);
 
   //Covariances for gps smoother
   Eigen::Matrix<float, 5, 5> Q_gps;
-  Eigen::Matrix<float, 4, 4> R_gps;
+  Eigen::Matrix<float, 5, 5> R_gps;
 
   // mav params
   mav_params::MavParams p_;
