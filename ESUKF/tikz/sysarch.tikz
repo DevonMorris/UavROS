@@ -1,0 +1,32 @@
+\begin{tikzpicture}[>=latex]
+
+\tikzstyle{block} = [draw, rectangle, align=center, minimum width=2cm, minimum height=2cm]
+
+% Position controller
+\node [block] (a) {position\\controller};
+\node [left=0.5cm of a.150] (input1) {$p_n$};
+\node [left=0.5cm of a.170] (input2) {$p_e$};
+\node [left=0.5cm of a.190] (input3) {$p_d$};
+\node [left=0.5cm of a.210] (input4) {$\psi$};
+\draw [->] (input1) -- (a.150);
+\draw [->] (input2) -- (a.170);
+\draw [->] (input3) -- (a.190);
+\draw [->] (input4) -- (a.210);
+
+% hardware block
+\node [block, right=2cm of a] (b) {hardware};
+\draw [->] (a) -- node[above] {$\phi$, $\theta$, $\dot{\psi}$, $F$} (b.180);
+
+% ArUco
+\node [block, below right=1.25cm and 2cm of b] (c) {ArUco\\library};
+\node [right=0.5cm of c] (arucoOut) {$\hat{\mathbf{x}}_{aruco}$};
+\draw [->] (b.20) -| node[left=1.5cm, above] {camera, $30$ Hz} (c.90);
+\draw [->] (c) -- (arucoOut);
+
+% MCL
+\node [block, left=3.5cm of c] (d) {MCL};
+\draw [->] (b.340) |- +(1,0) |- node[left=0.75cm, above] {$\mathbf{a}$, $\omega$} (d.20);
+\draw [->] (c.200) -- node[above] {$\{\mathbf{z}_i\}_{i=0}^{M}$} (d.340);
+\draw [->] (d.180) -| node[right=0.5cm, above] {$\hat{\mathbf{x}}$} (a.270);
+
+\end{tikzpicture}

@@ -1,0 +1,25 @@
+\begin{tikzpicture}[
+  iRN/.style={blue!50!black},
+  bRN/.style={yellow!50!black},
+  dt/.style={green!50!black}]
+
+\draw (0, 0) coordinate (inertial);
+\draw (4, 3.5) coordinate (body t);
+\draw (6, 3) coordinate (body t plus);
+
+\draw (inertial) node[above left] {$\mathcal{I}$} \keyframe;
+\draw[rotate=-20] (body t) \keyframe node[above left=1cm] {$\mathcal{B}_t$};
+\draw[rotate=-35] (body t plus) \keyframe node[above right] {$\mathcal{B}_{t+\Delta t}$};
+
+\draw[transform,iRN] (inertial) to [bend left=45] node[above left] {$(\mathcal{I}^\mathcal{B})_t$} (body t);
+\draw[transform,bRN] (body t) to [bend right=20] node[below right,near start] {$(\mathcal{B}^\mathcal{I})_t$} (inertial);
+\draw[transform,iRN] (inertial) to [bend right=20] node[above left] {$(\mathcal{I}^\mathcal{B})_{t+\Delta t}$} (body t plus);
+\draw[transform,bRN] (body t plus) to [bend left=40] node[below right,near start] {$(\mathcal{B}^\mathcal{I})_{t+\Delta t}$} (inertial);
+\draw[transform,dt] (body t) to [bend left=40] node[above] {${\Delta t}$} (body t plus);
+
+% Legend
+\node at (7.2,0.5) {iRN};
+\draw[transform,iRN]  (6.4,0.35) -- +(45:0.5);
+\node at (7.2,0) {bRN};
+\draw[transform,bRN] (6.4,-0.15) -- +(45:0.5);
+\end{tikzpicture}
