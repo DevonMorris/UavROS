@@ -1,0 +1,69 @@
+% !TEX root=main.tex
+
+\section{Quaternions}
+
+A quaternion is a generalization of the complex numbers $a + bi \in \mathbb{C}$. We can think of quaternions as defining a new set $\mathbb{H} = \mathbb{C} + \mathbb{C}j$, and defining $k \triangleq ij$ we create can write any quaternion as
+\beq
+a + bi + cj + dk \in \mathbb{H}, 
+\eeq
+where $\{i,j,k\}$ are three imaginary units that multiply as follows:
+\beq
+i^2 = j^2 = k^2 = ijk = -1.
+\eeq
+
+Quaternions are powerful because they share many properties with complex numbers. Regarding quaternions as complex numbers with multidimensional imaginary part, we can rewrite every quaternion,
+\beq
+q_w + q_xi + q_yj + q_zk = 
+\bma
+1 & i & j & k
+\ema
+\bma
+q_w \\
+q_x \\
+q_y \\
+q_z \\
+\ema
+\eeq
+We typically refer to this last vector as the quaternion and split it into its real scalar and imaginary vector components
+\beq
+\mathbf{q} = 
+\bma
+q_w \\
+\mathbf{q}_v \\
+\ema
+\eeq
+Continuing with this notation, we can now create an algebra for quaternions as follows: Let $\mathbf{p},\mathbf{q} \in \mathbb{H}$ and $\alpha \in \mathbb{R}$.
+\beq
+\alpha\mathbf{q} = 
+\bma
+\alpha q_w \\
+\alpha \mathbf{q}_v
+\ema
+\eeq
+\beq
+\mathbf{p} \pm \mathbf{q} = 
+\bma
+p_w \pm q_w \\
+\mathbf{p_v} \pm \mathbf{q_v} \\
+\ema
+\eeq
+
+\beq
+\mathbf{p} \otimes \mathbf{q} =
+\bma
+p_wq_w - \mathbf{p}_v^\top\mathbf{q}_v \\
+p_w\mathbf{q}_v + q_w\mathbf{p}_v + \mathbf{p}_v \times \mathbf{q}_v \\
+\ema
+\eeq
+At this point, we note that 
+\beq
+\mathbf{p} \otimes \mathbf{q} = - (\mathbf{q} \otimes \mathbf{p})
+\eeq
+Furthermore, we notice that the quaternion project distributes over the sum
+\beq
+\mathbf{p} \otimes (\mathbf{q} + \mathbf{r}) = \mathbf{p} \otimes \mathbf{q} + \mathbf{p} \otimes \mathbf{r}
+\eeq
+\beq
+(\mathbf{p} + \mathbf{q}) \otimes \mathbf{r} = \mathbf{p} \otimes \mathbf{r} + \mathbf{q} \otimes \mathbf{r} \\
+\eeq
+

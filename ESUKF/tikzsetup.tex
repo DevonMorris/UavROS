@@ -1,0 +1,35 @@
+\usetikzlibrary{intersections,positioning,arrows.meta,calc,backgrounds,fit,shapes.geometric,shapes.multipart}
+
+\newcommand{\keyframe}{[style=keyframe] +(0,1) -- (0,0) -- +(1,0)}
+\newcommand{\quadrotor}{[style=quadrotor]
++(-0.7,0.2) ellipse (0.4 and 0.2)
+-- +(0.7,-0.2) ellipse (0.4 and 0.2)
++(0.5,0.4) ellipse (0.4 and 0.2)
+-- +(-0.5,-0.4) ellipse (0.4 and 0.2)
+}
+
+\tikzstyle{quadrotor}=[thick,draw=black,fill=blue!15]
+
+\tikzstyle{scan matcher color}=[red!80!black]
+\tikzstyle{mono vo color}=[green!40!black]
+\tikzstyle{3d vo color}=[blue!80!black]
+%\tikzstyle{node frame color}=[purple!80!black]
+\tikzstyle{node frame color}=[black]
+
+\tikzstyle{separator}=[color=black!20]
+\tikzstyle{keyframe}=[stealth-stealth,very thick]
+\tikzstyle{transform}=[-{Stealth},ultra thick]
+
+\tikzstyle{block}=[rectangle,draw,very thick,rounded corners=0.1cm,minimum height=1.25cm,minimum width=2.5cm,inner sep=6pt,align=center,text width=2.25cm]
+\tikzstyle{flow}=[->,thick]
+
+\tikzstyle{ekf color}=[node frame color]
+\tikzstyle{gating color}=[cyan!80!black]
+\tikzstyle{cov estimate color}=[orange!80!black]
+\tikzstyle{sensor color}=[black!90]
+
+\tikzstyle{switch contact}=[circle,draw,minimum size=0.05in,inner sep=0pt,node distance=0.625in,thick]
+\tikzstyle{switch lead}=[thick]
+\tikzstyle{pre}=[<-,>=stealth,thick]
+\tikzstyle{post}=[->,>=stealth,thick]
+\tikzstyle{prepost}=[<->,>=stealth,thick]

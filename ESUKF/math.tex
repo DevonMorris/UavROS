@@ -1,0 +1,174 @@
+\newcommand*{\skinny}[1]{{
+\medmuskip=0mu\relax
+\thickmuskip=0mu\relax
+\small#1}}
+
+\newcommand{\sign}{\operatorname{sign}}
+
+\newcommand*{\of}[1]{\ensuremath{(#1)}}
+\newcommand*{\inverseof}[1]{\ensuremath{\of{#1}\inverse}}
+
+\newcommand*{\vect}[1]{\ensuremath{\bm{\mathrm{#1}}}}
+\newcommand*{\mat}[1]{\ensuremath{\bm{\mathrm{#1}}}}
+
+\newcommand*{\modvar}[2][]{\ensuremath{#1{#2}}}
+\newcommand*{\modvect}[2][]{\ensuremath{\modvar[#1]{\vect{#2}}}}
+\newcommand*{\modmat}[2][]{\ensuremath{\modvar[#1]{\mat{#2}}}}
+
+\newcommand*{\at}[2]{\ensuremath{\left. {#1} \right\vert_{#2}}}
+
+\newcommand*{\half}{\ensuremath{\frac{1}{2}}}
+
+% modifiers
+\newcommand*{\hatdot}[1]{\ensuremath{\dot{\hat{#1}}}}
+\newcommand*{\inverse}{\ensuremath{{}^{-1}}}
+
+% operators
+\newcommand*{\transpose}{\ensuremath{\mathsf{T}}}
+\newcommand*{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand*{\skewmat}[1]{\left\lfloor#1\right\rfloor}
+\newcommand*{\pard}[2]{\frac{\partial {#1}}{\partial {#2}}}
+
+% unit vectors
+\newcommand*{\ii}[1][]{\modvect[#1]{i}}
+\newcommand*{\jj}[1][]{\modvect[#1]{j}}
+\newcommand*{\kk}[1][]{\modvect[#1]{k}}
+\newcommand*{\g}[1][]{\modvect[#1]{g}}
+\newcommand*{\f}[1][]{\modvect[#1]{f}}
+\newcommand*{\n}[1][]{\modvect[#1]{n}}
+
+% quaternions
+\newcommand*{\quatvec}[2][]{\modvect[#1]{\bar{#2}}}
+\newcommand*{\quatscalar}[2][]{\modvar[#1]{#2}_0}
+
+\newcommand*{\0}[1][]{\modvect[#1]{0}}
+\newcommand*{\p}[1][]{\modvect[#1]{p}}
+\newcommand*{\pvec}[1][]{\quatvec[#1]{p}}
+\newcommand*{\pw}[1][]{\quatscalar[#1]{p}}
+
+\newcommand*{\q}[1][]{\modvect[#1]{q}}
+\newcommand*{\qvec}[1][]{\quatvec[#1]{q}}
+\newcommand*{\qw}[1][]{\quatscalar[#1]{q}}
+
+\newcommand*{\dq}[1][]{\delta\modvect[#1]{\q}}
+
+% vectors
+\newcommand*{\y}[1][]{\modvect[#1]{y}}
+\renewcommand*{\v}[1][]{\modvect[#1]{v}}
+\newcommand*{\dv}[1][]{\delta\modvect[#1]{v}}
+\renewcommand*{\u}[1][]{\modvect[#1]{u}}
+\renewcommand*{\g}[1][]{\modvect[#1]{g}}
+\newcommand*{\z}[1][]{\modvect[#1]{z}}
+\renewcommand*{\r}[1][]{\modvect[#1]{r}}
+\newcommand*{\dth}[1][]{\delta\modvect[#1]{\theta}}
+
+\newcommand*{\dtht}[1][]{\Delta\modvect[#1]{\theta}}
+
+% matrices
+\newcommand*{\I}{\mat{I}}
+\newcommand*{\R}{\mat{R}}
+\newcommand*{\Rt}{\R^\transpose}
+\renewcommand*{\P}[1][]{\modmat[#1]{P}}
+\newcommand*{\F}{\mat{F}}
+\newcommand*{\G}{\mat{G}}
+\newcommand*{\Q}{\mat{Q}}
+\renewcommand*{\H}{\mat{H}}
+\newcommand*{\K}{\mat{K}}
+\newcommand*{\M}{\mat{M}}
+
+\newcommand*{\N}{\mat{N}}
+\newcommand*{\Np}{\mat{N}_{\vect{p}}}
+\newcommand*{\Nth}{\mat{N}_{\vect{\theta}}}
+
+% Misc
+\renewcommand{\t}{t}
+\newcommand{\up}{\string^}
+\newcommand{\down}{\string^}
+
+\newcommand*{\ay}[1][]{\prescript{a}{}{\y}}
+\newcommand*{\by}[1][]{\prescript{b}{}{\y}}
+\newcommand*{\cy}[1][]{\prescript{c}{}{\y}}
+
+% state
+\newcommand*{\x}[1][]{\modvect[#1]{x}}
+
+\newcommand*{\pnb}[1][]{{\modvect[#1]{p}_n^b}}
+\newcommand*{\pnnb}[1][]{{\prescript{n}{}{\modvect[#1]{p}}_n^b}}
+\newcommand*{\pbn}[1][]{{\modvect[#1]{p}_b^n}}
+\newcommand*{\pbbn}[1][]{{\prescript{b}{}{\modvect[#1]{p}}_b^n}}
+\newcommand*{\pnk}[1][]{{\modvect[#1]{p}_n^k}}
+\newcommand*{\pnnk}[1][]{{\prescript{n}{}{\modvect[#1]{p}}_n^k}}
+\newcommand*{\pkn}[1][]{{\modvect[#1]{p}_k^n}}
+\newcommand*{\pkkn}[1][]{{\prescript{k}{}{\modvect[#1]{p}}_k^n}}
+\newcommand*{\pbc}[1][]{{\modvect[#1]{p}_b^c}}
+\newcommand*{\pkkc}[1][]{{\modvect[#1]{p}_k^{kc}}}
+\newcommand*{\pkcc}[1][]{{\modvect[#1]{p}_{kc}^c}}
+\newcommand*{\pckc}[1][]{{\modvect[#1]{p}_c^{kc}}}
+\newcommand*{\pabc}[1][]{{\prescript{c}{}{\modvect[#1]{p}}_a^b}}
+\newcommand*{\pab}[1][]{{\modvect[#1]{p}_a^b}}
+\newcommand*{\pkc}[1][]{{\modvect[#1]{p}_k^{kc}}}
+
+\newcommand*{\qnb}[1][]{{\modvect[#1]{q}_n^b}}
+\newcommand*{\qbn}[1][]{{\modvect[#1]{q}_b^n}}
+\newcommand*{\qnk}[1][]{{\modvect[#1]{q}_n^k}}
+\newcommand*{\qkn}[1][]{{\modvect[#1]{q}_k^n}}
+\newcommand*{\qbc}[1][]{{\modvect[#1]{q}_b^c}}
+\newcommand*{\qkkc}[1][]{{\modvect[#1]{q}_k^{kc}}}
+\newcommand*{\qkcc}[1][]{{\modvect[#1]{q}_{kc}^c}}
+\newcommand*{\qckc}[1][]{{\modvect[#1]{q}_c^{kc}}}
+\newcommand*{\qab}[1][]{{\modvect[#1]{q}_a^b}}
+\newcommand*{\qba}[1][]{{\modvect[#1]{q}_b^a}}
+\newcommand*{\qac}[1][]{{\modvect[#1]{q}_a^c}}
+\newcommand*{\vb}[1][]{{\modvect[#1]{v}}}
+\newcommand*{\dthnb}[1][]{{\dth[#1]_n^b}}
+\newcommand*{\dthnk}[1][]{{\dth[#1]_n^k}}
+\newcommand*{\dthkn}[1][]{{\dth[#1]_k^n}}
+\newcommand*{\dthbn}[1][]{{\dth[#1]_b^n}}
+
+\newcommand*{\angvel}[1][]{\modvect[#1]{\omega}}
+\newcommand*{\accel}[1][]{\modvect[#1]{a}}
+\newcommand*{\angcel}[1][]{\modvect[#1]{\alpha}}
+\newcommand*{\gbias}[1][]{{\modvect[#1]{\beta}_{\angvel}}}
+\newcommand*{\abias}[1][]{{\modvect[#1]{\beta}_{\accel}}}
+
+\newcommand*{\dx}[1][]{\delta \x[#1]}
+\newcommand*{\dpnb}[1][]{{\delta \pnb[#1]}}
+\newcommand*{\dqnb}[1][]{{\delta \qnb[#1]}}
+\newcommand*{\dvb}[1][]{{\delta \vb[#1]}}
+\newcommand*{\dgbias}[1][]{{\delta \gbias[#1]}}
+\newcommand*{\dabias}[1][]{{\delta \abias[#1]}}
+\newcommand*{\dmu}[1][]{{\delta \modvar[#1]{\mu}}}
+\newcommand*{\dpnk}[1][]{{\delta \pnk[#1]}}
+\newcommand*{\dqnk}[1][]{{\delta \qnk[#1]}}
+\newcommand*{\dpkn}[1][]{{\delta \pkn[#1]}}
+\newcommand*{\dqkn}[1][]{{\delta \qkn[#1]}}
+
+\newcommand*{\dpbn}[1][]{{\delta \pbn[#1]}}
+\newcommand*{\dqbn}[1][]{{\delta \qbn[#1]}}
+
+\newcommand*{\noise}[1][]{\modvect[#1]{\eta}}
+\newcommand*{\noiseu}[1][]{\modvect[#1]{\upsilon}}
+\newcommand*{\noisex}[1][]{\modvect[#1]{\eta}}
+\newcommand*{\noisedx}[1][]{\modvect[#1]{\eta}}
+
+% measurements
+\newcommand*{\h}[1][]{\modvect[#1]{h}}
+\newcommand*{\haccel}[1][]{\h[#1]_\text{acc}}
+\newcommand*{\zaccel}[1][]{\z[#1]_\text{acc}}
+\newcommand*{\raccel}[1][]{\r[#1]_\text{acc}}
+\newcommand*{\Haccel}[1][]{\H_\text{acc}}
+
+% equations
+\def\bql{\begin{equation}} 
+\def\eql{\end{equation}} 
+\def\beq{\begin{equation*}}
+\def\eeq{\end{equation*}} 
+
+% matrices
+\def\bma{\begin{bmatrix}} 
+\def\ema{\end{bmatrix}}
+
+% operators for optimization
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+

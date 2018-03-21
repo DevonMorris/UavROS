@@ -1,0 +1,80 @@
+\documentclass[letterpaper,10pt,conference]{ieeeconf}
+
+\IEEEoverridecommandlockouts % \thanks command
+\overrideIEEEmargins % Needed to meet printer requirements.
+
+\usepackage[pdftex]{graphicx} % for pdf, bitmapped graphics files
+\graphicspath{ {figures/} }
+
+\usepackage{epsfig} % for postscript graphics files
+%\usepackage{mathptmx} % assumes new font selection scheme installed
+%\usepackage{times} % assumes new font selection scheme installed
+\usepackage[table,xcdraw,usenames,dvipsnames]{xcolor}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{bm}
+\usepackage{cite}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{adjustbox}
+% \usepackage{subcaption}
+
+\input{math}
+
+% \captionsetup[figure]{font=small}
+
+\usepackage{tikz}
+\input{tikzsetup}
+
+\newlength{\figurewidth}
+\setlength{\figurewidth}{0.5\textwidth}
+\newlength{\widefigurewidth}
+\setlength{\widefigurewidth}{0.8\textwidth}
+
+\usepackage{array}
+\newcolumntype{\$}{>{\global\let\currentrowstyle\relax}}
+\newcolumntype{\^}{>{\currentrowstyle}}
+\newcommand{\rowstyle}[1]{\gdef\currentrowstyle{#1}%
+	#1\ignorespaces
+}
+
+\newcommand{\todo}[1]{{\color{NavyBlue}[TODO: #1]}}
+\newcommand{\pcl}[1]{{\color{Maroon}[PCL: #1]}}
+
+
+\title{\LARGE \bf The Error State Unscented Kalman Filter For Full State UAV Estimation}
+
+
+\author{Timothy Devon Morris% <-this % stops a space
+\thanks{T. D. Morris is a PhD student in Electrical and Computer Engineering at Brigham Young University, Provo, UT (email: devonmorris1992@gmail.com).}
+}
+
+
+\begin{document}
+\maketitle
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{abstract}
+\input{abstract}
+\end{abstract}
+
+
+%\input{introduction}
+\input{quaternion}
+%\input{motion_model}
+
+
+
+\addtolength{\textheight}{-4.5cm}   % This command serves to balance the column lengths
+                                  % on the last page of the document manually. It shortens
+                                  % the textheight of the last page by a suitable amount.
+                                  % This command does not take effect until the next page
+                                  % so it should come on the page before the last. Make
+                                  % sure that you do not shorten the textheight too much.
+
+%\bibliographystyle{ieeetr}
+%\bibliography{refs}
+
+\end{document}

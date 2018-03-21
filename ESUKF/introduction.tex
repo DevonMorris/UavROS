@@ -1,0 +1,12 @@
+% !TEX root=main.tex
+\section{INTRODUCTION}
+\label{sec:intro}
+
+The DesktopQuad project aims to put a multirotor on every table. The platform consists of a tethered quadrotor, built using the frame of an Inductrix FPV quad. The multirotor is equipped with an upward facing USB camera, allowing it to localize itself using an ArUco marker map. The DestopQuad autopilot is built on top of the ROSflight~\cite{Jackson2016} stack.
+
+\begin{figure}[h!]
+    \centering
+    \resizebox{\figurewidth}{!}{\input{tikz/sysarch.tikz}}
+    \caption[DesktopQuad system architecture]{DesktopQuad system architecture. Using IMU measurements $\mathbf{a}$ and $\omega$ from the flight controller and ArUco marker pose measurements $\mathbf{z}_i$ from the ArUco library, we perform Monte Carlo localization (MCL) to create a pose estimate $\hat{\mathbf{x}}$ at 100 Hz. This rate is an improvement from the raw ArUco marker map pose estimate $\hat{\mathbf{x}}_{aruco}$ that is created at 20 Hz, which is not sufficient for control.}
+    \label{fig:sysarch}
+\end{figure}

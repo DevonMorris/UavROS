@@ -1,0 +1,54 @@
+% !TEX root=main.tex
+
+\section{Motion Models}
+\label{sec:motion_models}
+In order to achieve a high rate of state estimates, it is important to propagate the position and orientation state of the micro quad in between measurement updates. In this project, two types of motion models were implemented and compared.
+
+\begin{equation}
+\x \triangleq
+\begin{pmatrix}
+\p^\top & {\q_W^C}^\top & \v^\top & \angvel^\top
+\end{pmatrix}
+^\top
+\end{equation}
+
+\subsection{Stochastically-Driven Nearly-Constant Velocity}
+\label{subsec:mm-sndcv}
+
+The first motion model used is a 6 degree of freedom (DOF) nearly-constant velocity model, driven by linear and angular acceleration noise processes.
+
+\begin{equation}
+\x[\dot] =
+\begin{pmatrix}
+\p[\dot] \\ \q[\dot]_W^C \\ \v[\dot] \\ \angvel[\dot]
+\end{pmatrix}
+=
+\begin{pmatrix}
+\v \\ \frac{1}{2} \q \otimes \q\of{\angvel} \\ \accel \\ \angcel
+\end{pmatrix}
+\end{equation}
+
+\begin{align}
+\accel &\sim \mathcal{N}\of{\0,\Q_{\accel}} \\
+\angcel &\sim \mathcal{N}\of{\0,\Q_{\angcel}}
+\end{align}
+
+where $\accel \sim \mathcal{N}\of{\0,\Q_{\accel}}$ and $\angcel \sim \mathcal{N}\of{\0,\Q_{\angcel}}$ and are wide-sense stationary (WSS).
+
+\subsection{IMU Mechanized}
+\label{subsec:mm-mech}
+
+To overcome the issues of the SDNCV motion model, an IMU mechanized motion model is introduced that takes into account quadrotor kinematics \cite{Beard2008}.
+
+\begin{equation}
+\x[\dot] =
+\begin{pmatrix}
+\p[\dot] \\ \q[\dot]_W^C \\ \v[\dot] \\ \angvel[\dot]
+\end{pmatrix}
+=
+\begin{pmatrix}
+\v \\ \frac{1}{2} \q \otimes \q\of{\angvel} \\ \accel \\ -
+\end{pmatrix}
+\end{equation}
+
+where $\accel$ and $\angvel$ come from the IMU as measurements.
