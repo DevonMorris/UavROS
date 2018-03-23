@@ -1,0 +1,108 @@
+% !TEX root=main.tex
+
+\section{Rigid Body Motion}
+When studying rigid body dynamics, we are often concerned with rotations and translations of objects.The configuration space of rigid body is characterized by 6 degrees of freedom, 3 associated with translation and 3 associated with rotation.
+
+\subsection{Coordinate Frames}
+Coordinate frames are a useful tool in determining how two rigid bodies are oriented with respect to one another. In the case of UAV work, coodrinate frames are used to determine how a UAV is oriented with respect to a point on the ground. Between two coordinate frames $\mathcal{F}_1, \mathcal{F}_2$, there is an associated rotation $R_1^{2}$ and translation $T_{1 \rightarrow 2}$, transforming the origin of $\mathcal{F}_1$ to $\mathcal{F}_2$. This allows us to take points and vectors in one frame and express them in another frame.
+
+\subsection{Translations}
+Translations are often denoted as vectors $T \in \mathbb{R}^3$, which is a vector space. Since $\mathbb{R}^3$ is a vector space, we easily have a global representation of any translation $\mathbf{p}$ given by
+\beq
+T =
+\bma
+t_1 \\
+t_2 \\
+t_3
+\ema
+\eeq
+Now we notice that since points $\mathbf{p}$ also are in $\mathbb{R}^3$, there is a one-to-one correspondence between points and translations, specified by the identity map. We can use this fact to abuse notation and add points and translations (i.e. $\mathbf{p} + T$). Thus, when clear, we will use points and translations interchangeably. 
+
+\subsection{Rotations}
+The space of all rotations is denoted by $SO(3)$. These rotations $R \in SO(3)$ are defined as the linear operators $R:\mathbb{R}^3 \rightarrow \mathbb{R}^3$ that perserve vector length and relative orientation of vectors. Specifically let $R:\mathbb{R}^3 \rightarrow \mathbb{R}^3$ and $\mathbf{v},\mathbf{w} \in \mathbb{R}^3$, then we have that
+\beq
+SO(3) = \{R\ |\ ||R(\mathbf{v})|| = ||\mathbf{v}||, \\R(\mathbf{v})\times R(\mathbf{w}) = \mathbf{v} \times \mathbf{w} \}.
+\eeq
+
+The space of rotations has many different representations. One of the most common representations is ZYX euler angles, typically denoted by $(\psi, \theta, \phi)$. This is accomplished by specifying intermediate frames $\mathcal{F}_{\psi}$, $\mathcal{F}_{\psi\theta}$, $\mathcal{F}_{\psi\theta\phi}$. Let $\mathcal{F}_w$ be some fixed intertial reference frame. The intermediate frames are specified as follows
+\begin{itemize}
+  \item $\mathcal{F}_{\psi}$ results from rotating $\mathcal{F}_w$ about its Z-axis by $\psi$
+  \item $\mathcal{F}_{\psi\theta}$ results from rotating $\mathcal{F}_\psi$ about its Y-axis by $\theta$
+  \item $\mathcal{F}_{\psi\theta\phi}$ results from rotating $\mathcal{F}_{\psi\theta}$ about its X-axis by $\phi$
+\end{itemize}
+This representation of rotation is easy to understand and is to understand. However, it suffers from from singularities when the X-axis of $\mathcal{F}_{\psi\theta\phi}$ aligns with the Z-axis of $\mathcal{F}_w$. In these cases, one cannot distinguish between a rotation $\psi$ and $\phi$. Thus, the map from $(\psi, \theta, \phi)$ is not invertible when $\theta = \pm\frac{\pi}{2}$. This scenario is commonly refered to as ``gimbal lock''.
+
+In this work, we will take a more principled approach by taking the definition of $SO(3)$ and applying it to quaternions. We present the following as a candidate rotation operation that takes a vector $\mathbf{v}^1 \in \mathcal{F}_1$ and expresses it in $\mathcal{F}_2$
+\beq
+\bma
+0 \\
+\mathbf{v}^2
+\ema
+= \mathbf{q}_1^2 \otimes 
+\bma
+0\\
+\mathbf{v}^1
+\ema \otimes \mathbf{q}_1^{2*}
+\eeq
+We will denote the operator that performs this operation and extracts $\mathbf{v}^2$ by
+\beq
+\mathbf{v}^2 = R(\mathbf{q}_1^2,\mathbf{v}^1)
+\eeq
+Imposing the condition $||R(\mathbf{q}_1^2,\mathbf{v}^1)|| = ||\mathbf{v}^1||$, we get
+\beq
+||\mathbf{v}^1|| = ||\mathbf{q}_1^2||^2 ||\mathbf{v}^1||.
+\eeq
+Thus, we have the additional condition that $||\mathbf{q}_1^2|| = 1$. Note that by the properties of quaternions, relative orientation (i.e. $R(\mathbf{q}_1^2,\mathbf{v})\times R(\mathbf{q}_1^2,\mathbf{w}) = \mathbf{v} \times \mathbf{w}$) is also preserved. See Ref. \cite{Sola2017} for more details.
+
+\subsection{Motion}
+Now, we will concern ourselves with the change of $R_1^2$ and $T_{1\rightarrow 2}$ over time. To do so, we will specify 3 frames: the world frame $\mathcal{F}_w$, the vehicle frame $\mathcal{F}_v$, and the body frame $\mathcal{F}_b$. Typically in UAV applications, we specify the world frame as an intertial North-East-Down coordinate frame with origin somewhere on the ground. We express the current position of the vehicle $\mathbf{p}^w$ in the world frame. This also happens to be the translation between the world frame and the vehicle frame (i.e. $T_{w\rightarrow v}^w = \mathbf{p}^w$). Typcially we have the the velocity of the vehicle expressed in the body frame $\mathbf{v}^b$. This gives us the kinematic relation
+\beq
+\dot{\mathbf{p}}^w = \mathbf{v}^w = R(\mathbf{q}_v^{b*},\mathbf{v}^b).
+\eeq
+This works out nice because the tangent space of $\mathbb{R}^3$ is $\mathbb{R}^3$.
+
+For rotations, we have to determine what is the time derivative of a rotation. Using modern IMUs, we can measure angular velocity $\bm{\omega}_{v \rightarrow b}^{b}$. Ideally, we could express $\dot{\mathbf{q}}_v^b$ as a function of $\bm{\omega}_{v \rightarrow b}^{b}$. We first note that quaternion multiplcation obeys the product rule
+\beq
+\frac{d}{dt} \mathbf{q} \otimes \mathbf{p} = \dot{\mathbf{q}} \otimes \mathbf{\mathbf{p}} + 
+\mathbf{q} \otimes \dot{\mathbf{p}}.
+\eeq
+Taking the derivative of the unit quaternion constraint, 
+\beq
+\frac{d}{dt} \mathbf{q}_v^{b*} \otimes \mathbf{q}_v^b = \dot{\mathbf{q}}_v^{b*} \otimes \mathbf{q}_v^{b} + \mathbf{q}_v^{b*} \otimes \dot{\mathbf{q}}_v^b = \mathbf{0}.
+\eeq
+This implies that
+\beq
+\mathbf{q}_v^{b*} \otimes \dot{\mathbf{q}}_v^b = -(\mathbf{q}_v^{b*} \otimes \dot{\mathbf{q}}_v^b)^*. 
+\eeq
+Therefore, $\mathbf{q}_v^{b*} \otimes \dot{\mathbf{q}}_v^b$, must have zero scalar part. Thus, we can rewrite this term as
+\beq
+\mathbf{q}_v^{b*} \otimes \dot{\mathbf{q}}_v^b = 
+\bma
+0 \\
+\bm{\Omega}
+\ema
+\eeq
+Thus we have the ODE
+\beq
+\dot{\mathbf{q}}_v^b = \mathbf{q}_v^b \otimes 
+\bma
+0 \\
+\bm{\Omega}
+\ema
+\eeq
+This can be solved using the quaternion exponential 
+\beq
+\mathbf{q}_v^b(t) = \mathbf{q}_v^b(0) \otimes e^{
+  \bma
+  0 \\
+  \bm{\Omega}t
+\ema}
+\eeq
+Now we have written the derivative in terms of of some vector $\bm{\Omega} \in \mathbb{R}^3$. We call this the tangent space. Now, we need to determine the relationship between $\bm{\Omega}$ and $\bm{\omega}_{v \rightarrow b}^{b}$. This is given by
+\beq
+\dot{\mathbf{q}}_v^b = \frac{1}{2}\mathbf{q}_v^b \otimes 
+\bma
+0 \\
+\bm{\omega}_{v \rightarrow b}^{b}
+\ema.
+\eeq
