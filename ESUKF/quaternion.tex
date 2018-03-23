@@ -29,41 +29,127 @@ We typically refer to this last vector as the quaternion and split it into its r
 \mathbf{q} = 
 \bma
 q_w \\
-\mathbf{q}_v \\
+\mathbf{q_v} \\
 \ema
 \eeq
-Continuing with this notation, we can now create an algebra for quaternions as follows: Let $\mathbf{p},\mathbf{q} \in \mathbb{H}$ and $\alpha \in \mathbb{R}$.
+Continuing with this notation, we can now create an algebra for quaternions as follows: Let $\mathbf{q'},\mathbf{q} \in \mathbb{H}$ and $\alpha \in \mathbb{R}$.
 \beq
 \alpha\mathbf{q} = 
 \bma
 \alpha q_w \\
-\alpha \mathbf{q}_v
+\alpha \mathbf{q_v}
 \ema
 \eeq
 \beq
-\mathbf{p} \pm \mathbf{q} = 
+\mathbf{q'} \pm \mathbf{q} = 
 \bma
-p_w \pm q_w \\
-\mathbf{p_v} \pm \mathbf{q_v} \\
+q'_w \pm q_w \\
+\mathbf{q'_v} \pm \mathbf{q_v} \\
 \ema
 \eeq
 
 \beq
-\mathbf{p} \otimes \mathbf{q} =
+\mathbf{q'} \otimes \mathbf{q} =
 \bma
-p_wq_w - \mathbf{p}_v^\top\mathbf{q}_v \\
-p_w\mathbf{q}_v + q_w\mathbf{p}_v + \mathbf{p}_v \times \mathbf{q}_v \\
+q'_wq_w - \mathbf{q'}_v^\top\mathbf{q}_v \\
+q'_w\mathbf{q_v} + q_w\mathbf{q'_v} + \mathbf{q'_v} \times \mathbf{q_v} \\
 \ema
 \eeq
 At this point, we note that 
 \beq
-\mathbf{p} \otimes \mathbf{q} = - (\mathbf{q} \otimes \mathbf{p})
+\mathbf{q'} \otimes \mathbf{q} \neq \mathbf{q} \otimes \mathbf{q'}
 \eeq
-Furthermore, we notice that the quaternion project distributes over the sum
+Furthermore, we notice that the quaternion project distributes over the sum:
 \beq
-\mathbf{p} \otimes (\mathbf{q} + \mathbf{r}) = \mathbf{p} \otimes \mathbf{q} + \mathbf{p} \otimes \mathbf{r}
+\mathbf{q'} \otimes (\mathbf{q} + \mathbf{q''}) = \mathbf{q'} \otimes \mathbf{q} + \mathbf{q'} \otimes \mathbf{q''}
 \eeq
 \beq
-(\mathbf{p} + \mathbf{q}) \otimes \mathbf{r} = \mathbf{p} \otimes \mathbf{r} + \mathbf{q} \otimes \mathbf{r} \\
+(\mathbf{q'} + \mathbf{q}) \otimes \mathbf{q''} = \mathbf{q'} \otimes \mathbf{q''} + \mathbf{q} \otimes \mathbf{q''} \\
 \eeq
 
+To make this algebra useful, we will also specify an identity element, a conjugate operator and an inverse for every $\mathbf{q} \in \mathbb{H}$. These are defined analgously to the complex numbers. The identity element is given by
+\beq
+\mathbf{1} = 
+\bma
+1 \\
+\mathbf{0}
+\ema
+\eeq
+We define the conjugate operation as follows
+\beq
+\mathbf{q}^* =
+\bma
+q_w \\
+\mathbf{q_v}
+\ema^*
+=
+\bma
+q_w \\
+-\mathbf{q_v}
+\ema
+\eeq
+This conjugate operation shares some properties with the complex numbers such as
+\beq
+(\mathbf{q'} \otimes \mathbf{q})^* = \mathbf{q}^* \otimes \mathbf{q'}^*
+\eeq
+and
+\beq
+\mathbf{q} \otimes \mathbf{q}^* = \mathbf{q}^* \otimes \mathbf{q} = 
+\bma
+q_w^2 + ||\mathbf{q_v}||^2 \\
+\mathbf{0}
+\ema.
+\eeq
+This last property is used to define the norm of a quaternion
+\beq
+||\mathbf{q}|| = \sqrt{\mathbf{q} \otimes \mathbf{q}^*}.
+\eeq
+Now we can derive an inverse as follows
+\beq
+\begin{aligned}
+  ||\mathbf{q}||^2 = \mathbf{q} \otimes \mathbf{q}^*  = \mathbf{q}^* \otimes \mathbf{q} \\
+  \mathbf{1} = \mathbf{q} \otimes \frac{\mathbf{q}^*}{||\mathbf{q}||^2} =
+  \frac{\mathbf{q}^*}{||\mathbf{q}||^2} \otimes \mathbf{q}.
+\end{aligned}
+\eeq
+Thus we necessarily have that
+\beq
+\mathbf{q}^{-1} = \frac{\mathbf{q}^*}{||\mathbf{q}||^2}
+\eeq
+Note: in the special case that $||\mathbf{q}|| = 1$ we have that
+\beq
+\mathbf{q}^{-1} = \mathbf{q}^*.
+\eeq
+We call these quaternions ``unit quaternions''.
+
+
+We will also specify an exponential and logarithmic mapping for quaternions. These are derived in Ref. \cite{Sola2017}. The derivation follows that of complex numbers and thus uses taylor series to decompose the exponential into sines and cosines. Specifically, we have that
+\beq
+e^{\mathbf{q}} = 
+e^{q_w}\bma
+\cos ||\mathbf{q_v}|| \\
+\frac{\mathbf{q_v}}{||\mathbf{q_v}||} \sin ||\mathbf{q_v}||
+\ema
+\eeq
+We note that when $\mathbf{q}$ is a pure quaternion, we have that $||e^{\mathbf{q}}|| = 1$. This implies that any unit quaternion can be parameterized as 
+\beq
+e^{
+\bma
+0 \\
+\theta \mathbf{u}
+\ema}
+=
+\bma
+\cos \theta \\
+\mathbf{u} \sin \theta
+\ema
+\eeq
+
+\beq
+\log \mathbf{q} = 
+\bma
+\log ||\mathbf{q}|| \\
+\frac{\mathbf{q_v}}{||\mathbf{q_v}||} \arctan (||\mathbf{q_v}||, q_w).
+\ema
+\eeq
+In the special case that $||q|| = 1$, the logarithm returns a ``pure'' quaternion, which is defined as a quaternion with $0$ real part.

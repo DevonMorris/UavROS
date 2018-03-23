@@ -12,7 +12,7 @@ namespace mav_controller
     mav_state = Eigen::MatrixXf::Zero(12,1);
     trim_srv_ = nh_.serviceClient<mav_utils::Trim>("/mav/trim"); 
 
-    bool closed = true;
+    bool closed = false;
     // publishers and subscribes
     if (closed)
     {
@@ -194,8 +194,8 @@ namespace mav_controller
     float wn_h = wn_theta/40.;
     ki_h = std::pow(wn_h,2)/(p_.Va*k_theta_DC);
     kp_h = 2*.9*wn_h/(p_.Va*k_theta_DC);
-    kp_h = .0114;
-    ki_h = .0039;
+    kp_h = .02;
+    ki_h = .01;
 
     kp_phi = sgn(a_phi2)*1.0/3.0;
     float wn_phi = std::sqrt(kp_phi*a_phi2);
