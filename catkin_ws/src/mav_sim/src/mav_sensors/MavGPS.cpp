@@ -60,9 +60,9 @@ namespace mav_gps
       return;
     }
 
-    float n = tf_bw.getOrigin().getX() + nu_n;
-    float e = tf_bw.getOrigin().getY() + nu_e;
-    float h = -tf_bw.getOrigin().getZ() + nu_h;
+    float n = tf_bw.getOrigin().getX();
+    float e = tf_bw.getOrigin().getY();
+    float h = -tf_bw.getOrigin().getZ();
 
     // convert rotation into eigen and rotate velocity into correct frame
     tf::quaternionTFToEigen(tf_vb.getRotation(), R_vb);

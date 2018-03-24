@@ -48,6 +48,7 @@ private:
   ros::Subscriber ned_sub_;
   ros::Subscriber Va_est_sub_;
   ros::Subscriber chi_est_sub_;
+  ros::Subscriber phi_ff_sub_;
 
   ros::Publisher command_pub_;
   ros::ServiceClient trim_srv_;
@@ -61,6 +62,7 @@ private:
   void ned_cb_(const geometry_msgs::Vector3StampedConstPtr& msg);
   void chi_est_cb_(const std_msgs::Float32ConstPtr& msg);
   void va_est_cb_(const std_msgs::Float32ConstPtr& msg);
+  void phi_ff_cb_(const std_msgs::Float32ConstPtr& msg);
 
   ros::Time now;
 
@@ -80,6 +82,7 @@ private:
   float a_V3;
   float a_beta1;
   float a_beta2;
+  float phi_ff;
 
   float h_takeoff;
   float h_hold;

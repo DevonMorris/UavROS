@@ -23,6 +23,7 @@ namespace mav_controller
       euler_sub_ = nh_.subscribe("/mav/euler_est", 5, &MavController::euler_cb_, this);
       ned_sub_ = nh_.subscribe("/mav/ned_est", 5, &MavController::ned_cb_, this);
       Va_est_sub_ = nh_.subscribe("/mav/Va_lpf", 5, &MavController::va_est_cb_, this);
+      phi_ff_sub_ = nh_.subscribe("/mav/phi_ff", 5, &MavController::phi_ff_cb_, this);
     }
     else 
     {
@@ -32,6 +33,7 @@ namespace mav_controller
       twist_sub_ = nh_.subscribe("/mav/twist", 5, &MavController::twist_cb_, this);
       euler_sub_ = nh_.subscribe("/mav/euler", 5, &MavController::euler_cb_, this);
       ned_sub_ = nh_.subscribe("/mav/ned", 5, &MavController::ned_cb_, this);
+      phi_ff_sub_ = nh_.subscribe("/mav/phi_ff", 5, &MavController::phi_ff_cb_, this);
     }
 
     command_pub_ = nh_.advertise<mav_msgs::Command>("/mav/command", 5);
@@ -52,6 +54,7 @@ namespace mav_controller
     int_takeoff = 0.0;
     int_phi = 0.0;
     int_chi = 0.0;
+    phi_ff = 0.0;
   }
 
   void MavController::h_cb_(const std_msgs::Float32ConstPtr& msg)
@@ -67,6 +70,11 @@ namespace mav_controller
   void MavController::Chi_cb_(const std_msgs::Float32ConstPtr& msg)
   {
     Chi_c = msg->data;
+  }
+
+  void MavController::phi_ff_cb_(const std_msgs::Float32ConstPtr& msg)
+  {
+    phi_ff = msg->data;
   }
 
   void MavController::chi_est_cb_(const std_msgs::Float32ConstPtr& msg)
@@ -197,13 +205,13 @@ namespace mav_controller
     kp_h = .02;
     ki_h = .01;
 
-    kp_phi = sgn(a_phi2)*1.0/3.0;
+    kp_phi = sgn(a_phi2)*2.0/3.0;
     float wn_phi = std::sqrt(kp_phi*a_phi2);
     kd_phi = (2*2*wn_phi - a_phi1)/a_phi2 + .5;
     ki_phi = 0.01;
     
     float wn_chi = wn_phi/8.0;
-    kp_chi = .5*.8*wn_chi*p_.Va/p_.g;
+    kp_chi = 2.0*.8*wn_chi*p_.Va/p_.g;
     ki_chi = std::pow(wn_chi,2)*p_.Va/p_.g;
 
     trimmed = true;
@@ -294,8 +302,8 @@ namespace mav_controller
       }
       e_chi = saturate(e_chi, -.2, .2); 
 
-      float phi_c = kp_chi*(e_chi) + ki_chi*int_chi;
-      phi_c = saturate(phi_c, -.5, .5);
+      float phi_c = kp_chi*(e_chi) + ki_chi*int_chi + phi_ff;
+      phi_c = saturate(phi_c, -.75, .75);
 
       e_phi = phi_c - mav_state(3);
       // wrap phi
@@ -307,7 +315,7 @@ namespace mav_controller
       {
         e_phi = e_phi + 2*M_PI;
       }
-      e_phi = saturate(e_phi, -.3, .3); 
+      e_phi = saturate(e_phi, -.75, .75); 
 
       command.dela = kp_phi*(e_phi) - ki_phi*int_phi - kd_phi*mav_state(9);
     }
