@@ -55,6 +55,7 @@ add_message_files(
   Command.msg
   Trim.msg
   Path.msg
+  Waypoint.msg
 )
 
 ## Generate services in the 'srv' folder

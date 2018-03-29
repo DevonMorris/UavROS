@@ -12,7 +12,7 @@
   <node name="mav_dynamics" pkg="mav_sim" type="mav_dynamics" ns="mav" output="screen"/>
   <node name="mav_wrench" pkg="mav_sim" type="mav_wrench" ns="mav" output="screen"/>
   <node name="mav_controller" pkg="mav_controller" type="mav_controller" ns="mav" output="screen"/>
-  <node name="mav_wind" pkg="mav_sim" type="mav_wind" ns="mav" output="screen"/>
+  <!--<node name="mav_wind" pkg="mav_sim" type="mav_wind" ns="mav" output="screen"/>-->
 
   <!--sensors -->
   <node name="mav_imu" pkg="mav_sim" type="mav_imu" ns="mav" output="screen"/>
@@ -26,6 +26,10 @@
   <!--guidance-->
   <node name="mav_kinematics" pkg="mav_guidance" type="mav_kinematics" ns="mav" output="screen"/>
   <node name="mav_path_follower" pkg="mav_guidance" type="mav_path_follower" ns="mav" output="screen"/>
+  <node name="mav_path_manager" pkg="mav_guidance" type="mav_path_manager" ns="mav" output="screen"/>
+  <node name="mav_path_planner" pkg="mav_guidance" type="mav_path_planner" ns="mav" output="screen"/>
+
+  <!--waypoints-->
 
   <!--plotter-->
   <!--<node name="mav_plotter" pkg="mav_utils" type="mav_plotter.py" ns="mav" output="screen"/>-->
@@ -34,6 +38,6 @@
   <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)" required="true" />
-  <node name="sliders" pkg="rqt_ez_publisher" type="rqt_ez_publisher" /> 
+  <!--<node name="sliders" pkg="rqt_ez_publisher" type="rqt_ez_publisher" /> -->
 
 </launch>

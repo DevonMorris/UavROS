@@ -88,7 +88,7 @@ namespace mav_path_follower
     Eigen::Vector3f c;
     c << msg->c.x, msg->c.y, msg->c.z;
 
-    h_c = -msg->r.z;
+    h_c = -msg->c.z;
     float d = std::sqrt(std::pow(p(0) - c(0),2) + std::pow(p(1) - c(1),2));
     float phi = std::atan2(p(1) - c(1), p(0) - c(0));
 

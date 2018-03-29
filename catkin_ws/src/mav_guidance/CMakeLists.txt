@@ -147,13 +147,16 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}_mav_kinematics src/mav_kinematics/kinematics_node.cpp src/mav_kinematics/MavKinematics.cpp)
 add_executable(${PROJECT_NAME}_mav_path_follower src/mav_path_follower/path_follower_node.cpp src/mav_path_follower/MavPathFollower.cpp)
-
+add_executable(${PROJECT_NAME}_mav_path_manager src/mav_path_manager/path_manager_node.cpp src/mav_path_manager/MavPathManager.cpp)
+add_executable(${PROJECT_NAME}_mav_path_planner src/mav_path_planner/path_planner.cpp) 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
 ## e.g. "rosrun someones_pkg node" instead of "rosrun someones_pkg someones_pkg_node"
 set_target_properties(${PROJECT_NAME}_mav_kinematics PROPERTIES OUTPUT_NAME mav_kinematics PREFIX "")
 set_target_properties(${PROJECT_NAME}_mav_path_follower PROPERTIES OUTPUT_NAME mav_path_follower PREFIX "")
+set_target_properties(${PROJECT_NAME}_mav_path_manager PROPERTIES OUTPUT_NAME mav_path_manager PREFIX "")
+set_target_properties(${PROJECT_NAME}_mav_path_planner PROPERTIES OUTPUT_NAME mav_path_planner PREFIX "")
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -162,6 +165,8 @@ set_target_properties(${PROJECT_NAME}_mav_path_follower PROPERTIES OUTPUT_NAME m
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_mav_kinematics ${catkin_LIBRARIES})
 target_link_libraries(${PROJECT_NAME}_mav_path_follower ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_mav_path_manager ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_mav_path_planner ${catkin_LIBRARIES})
 
 #############
 ## Install ##
