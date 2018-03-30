@@ -26,7 +26,7 @@ class PlotWrapper:
 
         # Define plot names
         plots =  [['n', 'n_g'], ['e', 'e_g'], ['h', 'h_g'],
-                 ['Va', 'Va_g'], ['chi', 'chi_g']]
+                 ['Va', 'Va_g'], ['chi', 'chi_g'], ['traj']]
 
         # Add plots to the window
         for p in plots:
@@ -75,6 +75,7 @@ class PlotWrapper:
         t = msg.header.stamp.to_sec()
         vector = msg.vector
         self.plotter.add_vector_measurement('neh_g', [vector.x, vector.y, -vector.z], t)
+        self.plotter.add_measurement('traj', vector.y, vector.x)
 
     def va_g_cb_(self, msg):
         # Extract time

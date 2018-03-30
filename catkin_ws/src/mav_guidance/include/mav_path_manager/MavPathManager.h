@@ -88,6 +88,30 @@ private:
 
   managers manager;
 
+  struct dubinspath_s
+  {
+
+    Eigen::Vector3f ps;         /** the start position */
+    float chis;                 /** the start course angle */
+    Eigen::Vector3f pe;         /** the end position */
+    float chie;                 /** the end course angle */
+    float R;                    /** turn radius */
+    float L;                    /** length of the path */
+    Eigen::Vector3f cs;         /** center of the start circle */
+    int lams;                   /** direction of the start circle */
+    Eigen::Vector3f ce;         /** center of the endcircle */
+    int lame;                   /** direction of the end circle */
+    Eigen::Vector3f w1;         /** vector defining half plane H1 */
+    Eigen::Vector3f q1;         /** unit vector along striaght line path */
+    Eigen::Vector3f w2;         /** vector defining half plane H2 */
+    Eigen::Vector3f w3;         /** vector defining half plane H3 */
+    Eigen::Vector3f q3;         /** unit vector defining direction of half plane H3 */
+  };
+  struct dubinspath_s dubinspath_;
+  void dubinsParameters(const struct waypoint start_node, const struct waypoint end_node, float R);
+
+  float mo(float in);
+  Eigen::Matrix3f rotz(float theta);
 
   // params
   mav_params::MavParams params_;
