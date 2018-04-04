@@ -25,19 +25,13 @@ class PlotWrapper:
         self.plotter = Plotter()
 
         # Define plot names
-        plots =  [['n', 'n_g'], ['e', 'e_g'], ['h', 'h_g'],
-                 ['Va', 'Va_g'], ['chi', 'chi_g'], ['traj']]
+        plots =  ['n _n_g', 'e _e_g', 'h _h_g', 'Va _Va_g', 'chi _chi_g', 'e n --2d']
+        #plots =  [['n', 'n_g'], ['e', 'e_g'], ['h', 'h_g'],
+        #         ['Va', 'Va_g'], ['chi', 'chi_g'], ['traj']]
 
         # Add plots to the window
         for p in plots:
             self.plotter.add_plot(p)
-
-        # Add legends
-        self.plotter.add_legend('n')
-        self.plotter.add_legend('e')
-        self.plotter.add_legend('h')
-        self.plotter.add_legend('chi')
-        self.plotter.add_legend('Va')
 
         self.tf_listener = tf.TransformListener()
 
@@ -75,7 +69,6 @@ class PlotWrapper:
         t = msg.header.stamp.to_sec()
         vector = msg.vector
         self.plotter.add_vector_measurement('neh_g', [vector.x, vector.y, -vector.z], t)
-        self.plotter.add_measurement('traj', vector.y, vector.x)
 
     def va_g_cb_(self, msg):
         # Extract time

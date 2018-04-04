@@ -166,7 +166,7 @@ namespace mav_path_manager
       path_msg.line = false;
       path_msg.c.x = dubinspath_.cs(0); path_msg.c.y = dubinspath_.cs(1); path_msg.c.z = dubinspath_.cs(2);
       path_msg.rho = dubinspath_.R; path_msg.lamb = dubinspath_.lams;
-      if ((p - dubinspath_.w1).dot(dubinspath_.q1) >= 0) // start in H1
+      if ((p - dubinspath_.w1).dot(-dubinspath_.q1) >= 0) // start in H1
       {
         dub_state_ = dubin_state::BEFORE_H1_WRONG_SIDE;
       }
@@ -301,7 +301,7 @@ namespace mav_path_manager
 
       // compute L2
       ell = (cle - crs).norm();
-      theta = atan2f(cle(1) - crs(1), cle(0) - crs(0));
+      theta = std::atan2(cle(1) - crs(1), cle(0) - crs(0));
       float L2;
       if (2.0*R > ell)
         L2 = 9999.0f;
