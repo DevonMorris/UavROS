@@ -21,6 +21,9 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   tf_conversions
   mav_utils
+  grid_map_ros
+  grid_map_core
+  grid_map_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -149,6 +152,7 @@ add_executable(${PROJECT_NAME}_mav_kinematics src/mav_kinematics/kinematics_node
 add_executable(${PROJECT_NAME}_mav_path_follower src/mav_path_follower/path_follower_node.cpp src/mav_path_follower/MavPathFollower.cpp)
 add_executable(${PROJECT_NAME}_mav_path_manager src/mav_path_manager/path_manager_node.cpp src/mav_path_manager/MavPathManager.cpp)
 add_executable(${PROJECT_NAME}_mav_path_planner src/mav_path_planner/path_planner.cpp) 
+add_executable(${PROJECT_NAME}_mav_map src/mav_map/mav_map_node.cpp) 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -157,6 +161,7 @@ set_target_properties(${PROJECT_NAME}_mav_kinematics PROPERTIES OUTPUT_NAME mav_
 set_target_properties(${PROJECT_NAME}_mav_path_follower PROPERTIES OUTPUT_NAME mav_path_follower PREFIX "")
 set_target_properties(${PROJECT_NAME}_mav_path_manager PROPERTIES OUTPUT_NAME mav_path_manager PREFIX "")
 set_target_properties(${PROJECT_NAME}_mav_path_planner PROPERTIES OUTPUT_NAME mav_path_planner PREFIX "")
+set_target_properties(${PROJECT_NAME}_mav_map PROPERTIES OUTPUT_NAME mav_map PREFIX "")
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -167,6 +172,7 @@ target_link_libraries(${PROJECT_NAME}_mav_kinematics ${catkin_LIBRARIES})
 target_link_libraries(${PROJECT_NAME}_mav_path_follower ${catkin_LIBRARIES})
 target_link_libraries(${PROJECT_NAME}_mav_path_manager ${catkin_LIBRARIES})
 target_link_libraries(${PROJECT_NAME}_mav_path_planner ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_mav_map ${catkin_LIBRARIES})
 
 #############
 ## Install ##

@@ -10,7 +10,7 @@ int main(int argc, char **argv)
   ros::NodeHandle nh_;
   ros::Publisher waypointPublisher = nh_.advertise<mav_msgs::Waypoint>("/mav/waypoint", 10);
 
-  ros::Duration(.5).sleep();
+  ros::Duration(1).sleep();
 
   float Va = 35;
   float wps[5*num_waypoints] =

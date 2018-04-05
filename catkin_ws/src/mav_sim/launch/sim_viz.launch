@@ -27,6 +27,7 @@
   <node name="mav_kinematics" pkg="mav_guidance" type="mav_kinematics" ns="mav" output="screen"/>
   <node name="mav_path_follower" pkg="mav_guidance" type="mav_path_follower" ns="mav" output="screen"/>
   <node name="mav_path_manager" pkg="mav_guidance" type="mav_path_manager" ns="mav" output="screen"/>
+  <node name="mav_map" pkg="mav_guidance" type="mav_map" ns="mav" output = "screen"/>
   <node name="mav_path_planner" pkg="mav_guidance" type="mav_path_planner" ns="mav" output="screen"/>
 
   <!--waypoints-->
@@ -37,6 +38,9 @@
 
   <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
+  <node name="grid_map_viz" pkg="grid_map_visualization" type="grid_map_visualization" output="screen">
+    <rosparam command="load" file="$(find mav_guidance)/config/map.yaml"/>
+  </node>
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)" required="true" />
   <!--<node name="sliders" pkg="rqt_ez_publisher" type="rqt_ez_publisher" /> -->
 

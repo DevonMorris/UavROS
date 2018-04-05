@@ -10,7 +10,8 @@ Panels:
         - /TF1
         - /TF1/Frames1
         - /Axes1
-      Splitter Ratio: 0.5
+        - /GridMap1
+      Splitter Ratio: 0.551246524
     Tree Height: 443
   - Class: rviz/Selection
     Name: Selection
@@ -88,7 +89,7 @@ Visualization Manager:
           Value: false
         world_ned:
           Value: true
-      Marker Scale: 0.5
+      Marker Scale: 50
       Name: TF
       Show Arrows: true
       Show Axes: true
@@ -104,22 +105,42 @@ Visualization Manager:
       Value: true
     - Class: rviz/Axes
       Enabled: true
-      Length: 0.200000003
+      Length: 50
       Name: Axes
-      Radius: 0.0500000007
+      Radius: 5
       Reference Frame: vehicle
+      Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Class: grid_map_rviz_plugin/GridMap
+      Color: 200; 200; 200
+      Color Layer: elevation
+      Color Transformer: IntensityLayer
+      Enabled: true
+      Height Layer: elevation
+      Height Transformer: Layer
+      History Length: 1
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 10
+      Min Color: 255; 255; 0
+      Min Intensity: 0
+      Name: GridMap
+      Show Grid Lines: true
+      Topic: /mav/map
+      Unreliable: false
+      Use Rainbow: false
       Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
     Default Light: true
-    Fixed Frame: vehicle
+    Fixed Frame: world_ned
     Frame Rate: 30
   Name: root
   Tools:
     - Class: rviz/Interact
       Hide Inactive Objects: true
-    - Class: rviz/MoveCamera
     - Class: rviz/Select
     - Class: rviz/FocusCamera
     - Class: rviz/Measure
@@ -134,25 +155,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 4.75354767
+      Distance: 1920.5813
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0
-        Y: 0
-        Z: 0
-      Focal Shape Fixed Size: true
+        X: 569.838257
+        Y: 575.509155
+        Z: -35.6335907
+      Focal Shape Fixed Size: false
       Focal Shape Size: 0.0500000007
       Invert Z Axis: true
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.350397497
+      Pitch: 0.965398073
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 3.66725755
+      Yaw: 3.15539789
     Saved: ~
 Window Geometry:
   Displays:
@@ -170,5 +191,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1260
-  X: 1664
-  Y: 304
+  X: 1776
+  Y: 152

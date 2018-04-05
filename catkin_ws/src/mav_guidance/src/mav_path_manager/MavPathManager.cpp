@@ -26,7 +26,7 @@ namespace mav_path_manager
     idx_a = 0;
 
     // change this to change path manager type
-    manager = managers::DUBINS;
+    manager = managers::FILLET;
   }
 
   void MavPathManager::ned_est_cb_(const geometry_msgs::Vector3StampedConstPtr& msg)
@@ -437,7 +437,7 @@ namespace mav_path_manager
       path_msg.line = false;
       path_msg.Vg = 35;
       path_msg.c.x = 0.0; path_msg.c.y = 0.0; path_msg.c.z = -200;
-      path_msg.rho = 400;
+      path_msg.rho = 300;
       path_msg.lamb = 1;
     }
 
