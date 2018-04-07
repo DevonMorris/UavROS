@@ -15,8 +15,8 @@ int main(int argc, char** argv)
   // Create grid map.
   GridMap map({"elevation"});
   map.setFrameId("world_ned");
-  map.setGeometry(Length(1800, 1800), 10); // 
-  map.setPosition(Position(900, 900));
+  map.setGeometry(Length(2000, 2000), 10); // 
+  map.setPosition(Position(1000, 1000));
   //ROS_INFO("Created map with size %f x %f m (%i x %i cells).",
   //  map.getLength().x(), map.getLength().y(),
   //  map.getSize()(0), map.getSize()(1));
@@ -27,8 +27,8 @@ int main(int argc, char** argv)
 
     // Add data to grid map.
     float n_blocks = 5; // number of city blocks
-    float street_width = 150; // width of street in meters
-    float grid_size = 1200 / n_blocks;
+    float street_width = 200; // width of street in meters
+    float grid_size = 1500 / n_blocks;
     ros::Time time = ros::Time::now();
     for (GridMapIterator it(map); !it.isPastEnd(); ++it) {
       Position position;

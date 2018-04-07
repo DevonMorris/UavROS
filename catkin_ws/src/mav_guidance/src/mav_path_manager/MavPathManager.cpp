@@ -12,7 +12,7 @@ namespace mav_path_manager
     // publishers and subscribes
     path_pub_ = nh_.advertise<mav_msgs::Path>("/mav/path", 5);
 
-    waypoint_sub_ = nh_.subscribe("/mav/waypoint", 5, &MavPathManager::waypoint_cb_, this);
+    waypoint_sub_ = nh_.subscribe("/mav/waypoint", 50, &MavPathManager::waypoint_cb_, this);
     ned_est_sub_ = nh_.subscribe("/mav/ned_est", 5, &MavPathManager::ned_est_cb_, this);
 
     fil_state_ = fillet_state::STRAIGHT;
@@ -26,7 +26,7 @@ namespace mav_path_manager
     idx_a = 0;
 
     // change this to change path manager type
-    manager = managers::FILLET;
+    manager = managers::DUBINS;
   }
 
   void MavPathManager::ned_est_cb_(const geometry_msgs::Vector3StampedConstPtr& msg)
@@ -112,7 +112,7 @@ namespace mav_path_manager
     Eigen::Vector3f w_1(waypoints[idx_b].ned);
     Eigen::Vector3f w_2(waypoints[idx_c].ned);
 
-    float R_min = 100;
+    float R_min = 50;
 
     path_msg.Vg = waypoints[idx_a].Va_d;
     path_msg.r.x = w_0(0); path_msg.r.y = w_0(1); path_msg.r.z = w_0(2);

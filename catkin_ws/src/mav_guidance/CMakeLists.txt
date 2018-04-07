@@ -151,7 +151,7 @@ include_directories(
 add_executable(${PROJECT_NAME}_mav_kinematics src/mav_kinematics/kinematics_node.cpp src/mav_kinematics/MavKinematics.cpp)
 add_executable(${PROJECT_NAME}_mav_path_follower src/mav_path_follower/path_follower_node.cpp src/mav_path_follower/MavPathFollower.cpp)
 add_executable(${PROJECT_NAME}_mav_path_manager src/mav_path_manager/path_manager_node.cpp src/mav_path_manager/MavPathManager.cpp)
-add_executable(${PROJECT_NAME}_mav_path_planner src/mav_path_planner/path_planner.cpp) 
+add_executable(${PROJECT_NAME}_mav_path_planner src/mav_path_planner/path_planner_node.cpp src/mav_path_planner/MavPathPlanner.cpp) 
 add_executable(${PROJECT_NAME}_mav_map src/mav_map/mav_map_node.cpp) 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
