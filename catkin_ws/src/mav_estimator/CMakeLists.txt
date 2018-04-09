@@ -147,6 +147,7 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}_lpf src/lpf/lpf_node.cpp src/lpf/LPF.cpp)
 add_executable(${PROJECT_NAME}_mav_EKF src/mav_EKF/EKF_node.cpp src/mav_EKF/MavEKF.cpp)
+add_executable(${PROJECT_NAME}_mav_MUKF src/mav_MUKF/MUKF_node.cpp src/mav_MUKF/MavMUKF.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -154,6 +155,7 @@ add_executable(${PROJECT_NAME}_mav_EKF src/mav_EKF/EKF_node.cpp src/mav_EKF/MavE
 ## e.g. "rosrun someones_pkg node" instead of "rosrun someones_pkg someones_pkg_node"
 set_target_properties(${PROJECT_NAME}_lpf PROPERTIES OUTPUT_NAME lpf PREFIX "")
 set_target_properties(${PROJECT_NAME}_mav_EKF PROPERTIES OUTPUT_NAME mav_EKF PREFIX "")
+set_target_properties(${PROJECT_NAME}_mav_MUKF PROPERTIES OUTPUT_NAME mav_MUKF PREFIX "")
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -162,6 +164,7 @@ set_target_properties(${PROJECT_NAME}_mav_EKF PROPERTIES OUTPUT_NAME mav_EKF PRE
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_lpf ${catkin_LIBRARIES})
 target_link_libraries(${PROJECT_NAME}_mav_EKF ${catkin_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_mav_MUKF ${catkin_LIBRARIES})
 
 #############
 ## Install ##

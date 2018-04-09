@@ -21,10 +21,11 @@
 
   <!--estimator-->
   <node name="lpf" pkg="mav_estimator" type="lpf" ns="mav" output="screen"/>
-  <node name="mav_EKF" pkg="mav_estimator" type="mav_EKF" ns="mav" output="screen"/>
+  <!--<node name="mav_EKF" pkg="mav_estimator" type="mav_EKF" ns="mav" output="screen"/>-->
+  <node name="mav_MUKF" pkg="mav_estimator" type="mav_MUKF" ns="mav" output="screen"/>
 
   <!--guidance-->
-  <node name="mav_kinematics" pkg="mav_guidance" type="mav_kinematics" ns="mav" output="screen"/>
+  <!--<node name="mav_kinematics" pkg="mav_guidance" type="mav_kinematics" ns="mav" output="screen"/>-->
   <node name="mav_path_follower" pkg="mav_guidance" type="mav_path_follower" ns="mav" output="screen"/>
   <node name="mav_path_manager" pkg="mav_guidance" type="mav_path_manager" ns="mav" output="screen"/>
   <node name="mav_map" pkg="mav_guidance" type="mav_map" ns="mav" output = "screen"/>
@@ -33,8 +34,8 @@
   <!--waypoints-->
 
   <!--plotter-->
-  <!--<node name="mav_plotter" pkg="mav_utils" type="mav_plotter.py" ns="mav" output="screen"/>-->
-  <node name="guidance_plotter" pkg="mav_utils" type="guidance_plotter.py" ns="mav" output="screen"/>
+  <node name="mav_plotter" pkg="mav_utils" type="mav_plotter.py" ns="mav" output="screen"/>
+  <!--<node name="guidance_plotter" pkg="mav_utils" type="guidance_plotter.py" ns="mav" output="screen"/>-->
 
   <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
