@@ -32,13 +32,13 @@ namespace lpf
     Va_lpf_pub_ = nh_.advertise<std_msgs::Float32>("/mav/Va_lpf", 5);
     h_lpf_pub_ = nh_.advertise<std_msgs::Float32>("/mav/h_lpf", 5);
 
-    alpha_acc = .9;
-    alpha_gyro = .9;
-    alpha_gps_neh = .9;
-    alpha_h = .9;
-    alpha_Va = .95;
-    alpha_Vg = .9;
-    alpha_chi = .9;
+    alpha_acc = .8;
+    alpha_gyro = .8;
+    alpha_gps_neh = .8;
+    alpha_h = .8;
+    alpha_Va = .8;
+    alpha_Vg = .8;
+    alpha_chi = .8;
   }
 
   void LPF::imu_cb_(const sensor_msgs::ImuConstPtr& msg)

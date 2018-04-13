@@ -20,6 +20,7 @@ namespace mav_MUKF
     euler_est_pub_ = nh_.advertise<geometry_msgs::Vector3Stamped>("/mav/euler_est" ,5);
     ned_est_pub_ = nh_.advertise<geometry_msgs::Vector3Stamped>("/mav/ned_est" ,5);
     chi_est_pub_ = nh_.advertise<std_msgs::Float32>("/mav/chi_est", 5);
+    v_est_pub_ = nh_.advertise<geometry_msgs::Vector3Stamped>("/mav/vb_est", 5);
 
     gyro = Eigen::Vector3f::Zero();
     acc = Eigen::Vector3f::Zero();
@@ -28,9 +29,6 @@ namespace mav_MUKF
     mav_n_state.ned  << 0., 0., -200;
     mav_n_state.Rbv = Eigen::Quaternion<float>::Identity();
     mav_n_state.vb  << 30., 0., 0.;
-
-    ROS_WARN_STREAM(mav_n_state.Rbv.coeffs());
-
 
     Va_est = 30.;
     chi_lpf = 0.;
@@ -87,12 +85,12 @@ namespace mav_MUKF
     float sin_nomega = std::sin(gyro.norm()*dt/N/2.);
     Eigen::Quaternionf exp_omega(cos_nomega, sin_nomega*omega_n(0), 
         sin_nomega*omega_n(1), sin_nomega*omega_n(2));
+    Eigen::Vector3f grav; grav << 0., 0., p_.g;
     for (int i = 0; i < N; i++)
     {
       NState dstate;
-      // active rotations
-      dstate.ned = mav_n_state.Rbv.inverse()*mav_n_state.vb*dt/N;
-      dstate.vb = acc*dt/N;
+      dstate.ned = mav_n_state.Rbv*mav_n_state.vb*dt/N;
+      dstate.vb = (mav_n_state.vb.cross(gyro) + acc + mav_n_state.Rbv.inverse()*grav)*dt/N;
       dstate.Rbv = exp_omega;
 
       mav_n_state = mav_n_state + dstate;
@@ -109,7 +107,6 @@ namespace mav_MUKF
     f_nstate(dt);
 
     auto euler = mav_n_state.Rbv.toRotationMatrix().eulerAngles(2, 1, 0);
-    ROS_WARN_STREAM(euler);
 
     geometry_msgs::Vector3Stamped msg_euler;
     msg_euler.header.stamp = now;
@@ -118,6 +115,24 @@ namespace mav_MUKF
     msg_euler.vector.z = euler(0);
     euler_est_pub_.publish(msg_euler);
 
+    geometry_msgs::Vector3Stamped msg_ned;
+    msg_ned.header.stamp = now;
+    msg_ned.vector.x = mav_n_state.ned(0);
+    msg_ned.vector.y = mav_n_state.ned(1);
+    msg_ned.vector.z = mav_n_state.ned(2);
+    ned_est_pub_.publish(msg_ned);
+
+    geometry_msgs::Vector3Stamped msg_vb;
+    msg_vb.header.stamp = now;
+    msg_vb.vector.x = mav_n_state.vb(0);
+    msg_vb.vector.y = mav_n_state.vb(1);
+    msg_vb.vector.z = mav_n_state.vb(2);
+    v_est_pub_.publish(msg_vb);
+
+    Eigen::Vector3f v_w = mav_n_state.Rbv*mav_n_state.vb;
+    std_msgs::Float32 msg_chi;
+    msg_chi.data = std::atan2(v_w(1), v_w(0));
+    chi_est_pub_.publish(msg_chi);
   }
 
 }

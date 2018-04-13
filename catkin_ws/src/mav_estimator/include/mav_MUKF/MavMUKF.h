@@ -60,6 +60,7 @@ class MavMUKF
   ros::Publisher euler_est_pub_;
   ros::Publisher twist_est_pub_;
   ros::Publisher chi_est_pub_;
+  ros::Publisher v_est_pub_;
 
   // callbacks for subscribers
   void h_lpf_cb_(const std_msgs::Float32ConstPtr& msg);
