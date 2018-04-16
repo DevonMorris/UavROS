@@ -6,7 +6,7 @@
 
 \beq
 \begin{aligned}
-  \dot{\mathbf{p}}^w &= R(\mathbf{q}_v^b, \mathbf{v}^b) \\
+  \dot{\mathbf{p}}^w &= R(\mathbf{q}_v^b) \mathbf{v}^b \\
   \dot{\mathbf{v}}^b &= \mathbf{v} \times \bm{\omega}_{v \rightarrow b}^{b} + \mathbf{a} + 
   R(\mathbf{q}_v^{b*}, \mathbf{g})\\
   \dot{\mathbf{q}}_v^b &= \frac{1}{2} \mathbf{q}_v^b \otimes \bm{\omega}_{v \rightarrow b}^{b}  \\
@@ -17,9 +17,9 @@
 
 \beq
 \begin{aligned}
-  \dot{\delta \mathbf{p}}^w &= R(\hat{\mathbf{q}}_v^b \otimes \delta \mathbf{q}_v^b, \hat{\mathbf{v}}^b + \delta \mathbf{v}^b) - R(\hat{\mathbf{q}}_v^b, \hat{\mathbf{v}}^b) \\
-  \dot{\delta \mathbf{v}}^b &=  \delta \mathbf{v}^b \times \bm{\omega}_{v \rightarrow b}^{b} + R(\delta \mathbf{q}_v^{b*} \otimes \hat{\mathbf{q}}_v^{b*}, \mathbf{g}) - R(\hat{\mathbf{q}}_v^{b*}, \mathbf{g})\\
+  \dot{\delta \mathbf{p}}^w &= R(\hat{\mathbf{q}}_v^b \otimes \delta \mathbf{q}_v^b)( \hat{\mathbf{v}}^b + \delta \mathbf{v}^b) - R(\hat{\mathbf{q}}_v^b) \hat{\mathbf{v}}^b \\
+  \dot{\delta \mathbf{v}}^b &=  \delta \mathbf{v}^b \times \bm{\omega}_{v \rightarrow b}^{b} + R(\delta \mathbf{q}_v^{b*} \otimes \hat{\mathbf{q}}_v^{b*}) \mathbf{g} - R(\hat{\mathbf{q}}_v^{b*}) \mathbf{g}\\
   \dot{\delta \bm{\theta}} &= \bm{\omega}_{v \rightarrow b}^{b} \times \delta \bm{\theta}\\
-    \delta \mathbf{q}_v^b &= e^{\delta \bm{\theta} / 2}
+  \delta \mathbf{q}_v^b &= e^{\left[0\ \delta \bm{\theta}\right]^T / 2}
 \end{aligned}
 \eeq

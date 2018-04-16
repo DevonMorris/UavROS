@@ -83,7 +83,9 @@ namespace mav_wrench
     {
       ROS_WARN_STREAM("Small Airspeed");
       V_a = 1;
+      V_a2 = 1;
     }
+
     float AR = std::pow(params_.b,2)/params_.S;
     float sigma_alpha = sigma(alpha);
 

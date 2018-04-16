@@ -46,18 +46,18 @@ In this work, we will take a more principled approach by taking the definition o
 \eeq
 We will denote the operator that performs this operation and extracts $\mathbf{v}^2$ by
 \beq
-\mathbf{v}^2 = R(\mathbf{q}_1^2,\mathbf{v}^1)
+\mathbf{v}^2 = R(\mathbf{q}_1^2)\mathbf{v}^1
 \eeq
-Imposing the condition $||R(\mathbf{q}_1^2,\mathbf{v}^1)|| = ||\mathbf{v}^1||$, we get
+Imposing the condition $||R(\mathbf{q}_1^2)\mathbf{v}^1|| = ||\mathbf{v}^1||$, we get
 \beq
 ||\mathbf{v}^1|| = ||\mathbf{q}_1^2||^2 ||\mathbf{v}^1||.
 \eeq
-Thus, we have the additional condition that $||\mathbf{q}_1^2|| = 1$. Note that by the properties of quaternions, relative orientation (i.e. $R(\mathbf{q}_1^2,\mathbf{v})\times R(\mathbf{q}_1^2,\mathbf{w}) = \mathbf{v} \times \mathbf{w}$) is also preserved. See Ref. \cite{Sola2017} for more details.
+Thus, we have the additional condition that $||\mathbf{q}_1^2|| = 1$. Note that by the properties of quaternions, relative orientation (i.e. $R(\mathbf{q}_1^2)\mathbf{v}\times R(\mathbf{q}_1^2)\mathbf{w} = \mathbf{v} \times \mathbf{w}$) is also preserved. See Ref. \cite{Sola2017} for more details.
 
 \subsection{Motion}
 Now, we will concern ourselves with the change of $R_1^2$ and $T_{1\rightarrow 2}$ over time. To do so, we will specify 3 frames: the world frame $\mathcal{F}_w$, the vehicle frame $\mathcal{F}_v$, and the body frame $\mathcal{F}_b$. Typically in UAV applications, we specify the world frame as an intertial North-East-Down coordinate frame with origin somewhere on the ground. We express the current position of the vehicle $\mathbf{p}^w$ in the world frame. This also happens to be the translation between the world frame and the vehicle frame (i.e. $T_{w\rightarrow v}^w = \mathbf{p}^w$). Typcially we have the the velocity of the vehicle expressed in the body frame $\mathbf{v}^b$. This gives us the kinematic relation
 \beq
-\dot{\mathbf{p}}^w = \mathbf{v}^w = R(\mathbf{q}_v^{b*},\mathbf{v}^b).
+\dot{\mathbf{p}}^w = \mathbf{v}^w = R(\mathbf{q}_v^{b*})\mathbf{v}^b.
 \eeq
 This works out nice because the tangent space of $\mathbb{R}^3$ is $\mathbb{R}^3$.
 
@@ -93,10 +93,7 @@ Thus we have the ODE
 This can be solved using the quaternion exponential 
 \beq
 \mathbf{q}_v^b(t) = \mathbf{q}_v^b(0) \otimes e^{
-  \bma
-  0 \\
-  \bm{\Omega}t
-\ema}
+\left[0 \ \bm{\Omega} \right]^T}
 \eeq
 Now we have written the derivative in terms of of some vector $\bm{\Omega} \in \mathbb{R}^3$. We call this the tangent space. Now, we need to determine the relationship between $\bm{\Omega}$ and $\bm{\omega}_{v \rightarrow b}^{b}$. This is given by
 \beq

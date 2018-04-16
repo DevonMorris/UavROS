@@ -17,6 +17,7 @@
 
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
+#include <Eigen/Cholesky>
 
 #include <mav_params/MavParams.h>
 #include <mav_utils/Trim.h>
@@ -29,18 +30,72 @@ namespace mav_MUKF
 
 struct NState{
   public:
-  Eigen::Vector3f ned;
-  Eigen::Quaternionf Rbv;
-  Eigen::Vector3f vb;
+    Eigen::Vector3f ned;
+    Eigen::Quaternionf Rbv;
+    Eigen::Vector3f vb;
 
-  NState operator+(const NState& b) const
-  {
-    NState sum;
-    sum.ned = this->ned + b.ned;
-    sum.Rbv = this->Rbv*b.Rbv;
-    sum.vb = this->vb+b.vb;
-    return sum;
-  }
+    NState()
+    {
+      ned = Eigen::Vector3f::Zero();
+      Rbv = Eigen::Quaternionf::Identity();
+      vb = Eigen::Vector3f::Zero();
+    }
+
+    NState operator+(const NState& b) const
+    {
+      NState sum;
+      sum.ned = this->ned + b.ned;
+      sum.Rbv = this->Rbv*b.Rbv;
+      sum.vb = this->vb+b.vb;
+      return sum;
+    }
+};
+
+struct EState{
+  public:
+    Eigen::Vector3f dned;
+    Eigen::Vector3f dvb;
+    Eigen::Vector3f dtheta;
+    Eigen::Quaternionf dRbv;
+    Eigen::Matrix<float, 5, 1> Z;
+    float w_m;
+    float w_c;
+
+    EState()
+    {
+      dned = Eigen::Vector3f::Zero();
+      dvb = Eigen::Vector3f::Zero();
+      dtheta = Eigen::Vector3f::Zero();
+      dRbv = Eigen::Quaternionf::Identity();
+    }
+
+    EState operator+(const EState& b) const
+    {
+      EState sum;
+      sum.dned = this->dned + b.dned;
+      sum.dvb = this->dvb + b.dvb;
+      sum.dtheta = this->dtheta + b.dtheta;
+      return sum;
+    }
+
+    Eigen::Matrix<float, 9, 1> vstate()
+    {
+      Eigen::Matrix<float, 9, 1> v;
+      v << this->dned, this->dvb, this->dtheta;
+      return v;
+    }
+
+    EState operator-(const EState& b) const
+    {
+      EState diff;
+      diff.dned = this->dned - b.dned;
+      diff.dvb = this->dvb - b.dvb;
+      diff.dtheta = this->dtheta - b.dtheta;
+      return diff;
+    }
+
+    // consider moving exp operator into this struct
+
 };
 
 
@@ -84,11 +139,31 @@ class MavMUKF
   Eigen::Vector3f gyro;
   Eigen::Vector3f acc;
 
+  // states for ESUKF
+  bool resample;
+  float gamma;
+  float lamb;
+  float alpha;
+  float beta;
+  float kappa;
+  int n;
+  EState mu;
+  Eigen::Matrix<float, 9, 9> Q_err;
+  Eigen::Matrix<float, 5, 5> R_err;
+  Eigen::Matrix<float, 9, 9> P_err;
+
   // mav params
   mav_params::MavParams p_;
 
   // RK4 integration
   void f_nstate(float dt);
+  void f_estate(float dt);
+
+  void sample_SigmaX();
+
+  std::vector<EState> e_states;
+
+  Eigen::Quaternionf quat_exp(Eigen::Quaternionf q);
 
   template <class T>
   T wrap(T x)
