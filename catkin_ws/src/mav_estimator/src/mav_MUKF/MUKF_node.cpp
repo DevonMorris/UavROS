@@ -8,7 +8,7 @@ int main(int argc, char **argv){
   // instantiate TFViewer object
   mav_MUKF::MavMUKF MUKF;
 
-  ros::Rate r(100);
+  ros::Rate r(50);
   while(ros::ok()){
     MUKF.tick();
     ros::spinOnce();

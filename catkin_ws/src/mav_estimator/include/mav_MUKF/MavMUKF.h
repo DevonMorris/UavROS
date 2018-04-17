@@ -23,22 +23,22 @@
 #include <mav_utils/Trim.h>
 
 
-typedef Eigen::Matrix<float, 12, 1> Vector12f;
+typedef Eigen::Matrix<double, 12, 1> Vector12f;
 
 namespace mav_MUKF
 {
 
 struct NState{
   public:
-    Eigen::Vector3f ned;
-    Eigen::Quaternionf Rbv;
-    Eigen::Vector3f vb;
+    Eigen::Vector3d ned;
+    Eigen::Quaterniond Rbv;
+    Eigen::Vector3d vb;
 
     NState()
     {
-      ned = Eigen::Vector3f::Zero();
-      Rbv = Eigen::Quaternionf::Identity();
-      vb = Eigen::Vector3f::Zero();
+      ned = Eigen::Vector3d::Zero();
+      Rbv = Eigen::Quaterniond::Identity();
+      vb = Eigen::Vector3d::Zero();
     }
 
     NState operator+(const NState& b) const
@@ -53,20 +53,20 @@ struct NState{
 
 struct EState{
   public:
-    Eigen::Vector3f dned;
-    Eigen::Vector3f dvb;
-    Eigen::Vector3f dtheta;
-    Eigen::Quaternionf dRbv;
-    Eigen::Matrix<float, 5, 1> Z;
-    float w_m;
-    float w_c;
+    Eigen::Vector3d dned;
+    Eigen::Vector3d dvb;
+    Eigen::Vector3d dtheta;
+    Eigen::Quaterniond dRbv;
+    Eigen::Matrix<double, 7, 1> Z;
+    double w_m;
+    double w_c;
 
     EState()
     {
-      dned = Eigen::Vector3f::Zero();
-      dvb = Eigen::Vector3f::Zero();
-      dtheta = Eigen::Vector3f::Zero();
-      dRbv = Eigen::Quaternionf::Identity();
+      dned = Eigen::Vector3d::Zero();
+      dvb = Eigen::Vector3d::Zero();
+      dtheta = Eigen::Vector3d::Zero();
+      dRbv = Eigen::Quaterniond::Identity();
     }
 
     EState operator+(const EState& b) const
@@ -78,9 +78,9 @@ struct EState{
       return sum;
     }
 
-    Eigen::Matrix<float, 9, 1> vstate()
+    Eigen::Matrix<double, 9, 1> vstate()
     {
-      Eigen::Matrix<float, 9, 1> v;
+      Eigen::Matrix<double, 9, 1> v;
       v << this->dned, this->dvb, this->dtheta;
       return v;
     }
@@ -126,44 +126,49 @@ class MavMUKF
   void imu_lpf_cb_(const sensor_msgs::ImuConstPtr& msg);
 
   ros::Time now;
+  ros::Time now_gps;
 
-  float h_est;
-  float Va_est;
-  float chi_lpf;
-  float Vg_lpf;
+  double h_est;
+  double Va_est;
+  double chi_lpf;
+  double Vg_lpf;
 
   // nominal mav state for integrating 
   NState mav_n_state;
 
   // states for imu
-  Eigen::Vector3f gyro;
-  Eigen::Vector3f acc;
+  Eigen::Vector3d gyro;
+  Eigen::Vector3d acc;
+
+  // state for gps
+  Eigen::Vector3d prev_gps;
 
   // states for ESUKF
   bool resample;
-  float gamma;
-  float lamb;
-  float alpha;
-  float beta;
-  float kappa;
+  bool initd;
+  double gamma;
+  double lamb;
+  double alpha;
+  double beta;
+  double kappa;
   int n;
   EState mu;
-  Eigen::Matrix<float, 9, 9> Q_err;
-  Eigen::Matrix<float, 5, 5> R_err;
-  Eigen::Matrix<float, 9, 9> P_err;
+  Eigen::Matrix<double, 9, 9> Q_err;
+  Eigen::Matrix<double, 7, 7> R_err;
+  Eigen::Matrix<double, 9, 9> P_err;
 
   // mav params
   mav_params::MavParams p_;
 
   // RK4 integration
-  void f_nstate(float dt);
-  void f_estate(float dt);
+  void f_nstate(double dt);
+  void f_estate(double dt);
 
   void sample_SigmaX();
 
   std::vector<EState> e_states;
 
-  Eigen::Quaternionf quat_exp(Eigen::Quaternionf q);
+  Eigen::Quaterniond quat_exp(Eigen::Vector3d q);
 
   template <class T>
   T wrap(T x)

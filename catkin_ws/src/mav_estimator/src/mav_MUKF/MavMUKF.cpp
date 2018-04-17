@@ -8,6 +8,7 @@ namespace mav_MUKF
   {
     ros::NodeHandle nh_private("~");
     now = ros::Time::now();
+    now_gps = ros::Time::now();
 
     // publishers and subscribes
     imu_lpf_sub_ = nh_.subscribe("/mav/imu_lpf", 5, &MavMUKF::imu_lpf_cb_, this);
@@ -22,31 +23,39 @@ namespace mav_MUKF
     chi_est_pub_ = nh_.advertise<std_msgs::Float32>("/mav/chi_est", 5);
     v_est_pub_ = nh_.advertise<geometry_msgs::Vector3Stamped>("/mav/vb_est", 5);
 
-    gyro = Eigen::Vector3f::Zero();
-    acc = Eigen::Vector3f::Zero();
+    gyro = Eigen::Vector3d::Zero();
+    acc = Eigen::Vector3d::Zero();
     acc(2) = -p_.g;
-
-    mav_n_state.ned  << 0., 0., -200;
-    mav_n_state.Rbv = Eigen::Quaternion<float>::Identity();
-    mav_n_state.vb  << 30., 0., 0.;
 
     Va_est = 30.;
     chi_lpf = 0.;
     Vg_lpf = 30.;
     gamma = .5;
-    P_err = .5*Eigen::Matrix<float, 9, 9>::Identity();
-    Q_err = .5*Eigen::Matrix<float, 9, 9>::Identity();
-    R_err = .01*Eigen::Matrix<float, 5, 5>::Identity();
+    P_err = Eigen::Matrix<double, 9, 9>::Zero();
+    // variances position
+    P_err(0,0) = 2; P_err(1,1) = 2; P_err(2,2) = 2;
+    P_err(3,3) = 1; P_err(4,4) = 1; P_err(5,5) = 1;
+    P_err(8,8) = .001; P_err(8,8) = .001; P_err(8,8) = .005; 
+    Q_err = .01*Eigen::Matrix<double, 9, 9>::Identity();
+    R_err = .001*Eigen::Matrix<double, 7, 7>::Identity();
+    R_err(3,3) = .001;
     resample = true;
+    mu = EState({});
+    mav_n_state = NState({});
+    mav_n_state.ned(2) = -200;
+    mav_n_state.vb(0) = 30;
+    prev_gps << 0., 0., -200;
+    sample_SigmaX();
 
     // good numbers according to Craig Bidstrup
     n = 9;
-    alpha = 1;
+    alpha = 1.0;
     beta = 2;
     kappa = 0;
     lamb = std::pow(alpha, 2)*(n + kappa) - n;
     mu.w_m  = lamb/(n + lamb);
     mu.w_c  = lamb/(n + lamb) + (1 - std::pow(alpha,2) + beta);
+    initd = true;
   }
 
   /*
@@ -78,41 +87,49 @@ namespace mav_MUKF
     /*
      * This is the kalman update callback
      */
-    ROS_WARN_STREAM(mu.dned);
-    std::vector<Eigen::Matrix<float, 5, 1>> measurements;
+    double dt_gps = (ros::Time::now() - now_gps).toSec();
+    now_gps = ros::Time::now();
 
-    Eigen::Matrix<float, 5, 1> z_t, z_hat_t;
-    z_t << msg->vector.x, msg->vector.y, h_est, Vg_lpf, chi_lpf;
-    z_hat_t << 0., 0., 0., 0., 0.;
+    std::vector<Eigen::Matrix<double, 7, 1>> measurements;
+
+    Eigen::Vector3d vw_gps;
+    vw_gps << msg->vector.x, msg->vector.y, -msg->vector.z;
+    vw_gps = (vw_gps - prev_gps)/dt_gps;
+    prev_gps << msg->vector.x, msg->vector.y, -msg->vector.z;
+
+    Eigen::Matrix<double, 7, 1> z_t, z_hat_t;
+    z_t << msg->vector.x, msg->vector.y, h_est, vw_gps(0), vw_gps(1), vw_gps(2), chi_lpf;
+    z_hat_t << 0., 0., 0., 0., 0., 0., 0.;
     
 
     for (auto&& chi: e_states)
     {
-      Eigen::Matrix<float, 5, 1> Z;
-      float vg = (mav_n_state.vb + chi.dvb).norm();
-      float psi = std::atan2(mav_n_state.vb(1) + chi.dvb(1), 
-          mav_n_state.vb(0) + chi.dvb(0));
+      Eigen::Matrix<double, 7, 1> Z;
+      double vg = (mav_n_state.vb + chi.dvb).norm();
+      Eigen::Vector3d vw = (mav_n_state.Rbv*chi.dRbv)*(mav_n_state.vb + chi.dvb);
+      double psi = std::atan2(vw(1), vw(0));
       Z << chi.dned(0) + mav_n_state.ned(0), chi.dned(1) + mav_n_state.ned(1),
-        - mav_n_state.ned(2) - chi.dned(2), vg, psi;
+        - mav_n_state.ned(2) - chi.dned(2), vw(0), vw(1), vw(2), psi;
       chi.Z = Z;
       z_hat_t += chi.w_m*Z;
     }
 
-    Eigen::Matrix<float, 5, 5> S_t;
-    Eigen::Matrix<float, 9, 5> P_xz;
-    S_t = Eigen::Matrix<float, 5, 5>::Zero();
-    P_xz = Eigen::Matrix<float, 9, 5>::Zero();
+    Eigen::Matrix<double, 7, 7> S_t;
+    Eigen::Matrix<double, 9, 7> P_xz;
+    S_t = Eigen::Matrix<double, 7, 7>::Zero();
+    P_xz = Eigen::Matrix<double, 9, 7>::Zero();
 
     for (auto&& chi: e_states)
     {
       S_t += chi.w_c*(chi.Z - z_hat_t)*((chi.Z - z_hat_t).transpose());
       P_xz += chi.w_c*((chi - mu).vstate())*((chi.Z - z_hat_t).transpose());
     }
+
     S_t += R_err;
-    Eigen::Matrix<float, 9, 5> K = P_xz*S_t.inverse();
+    Eigen::Matrix<double, 9, 7> K = P_xz*S_t.inverse();
 
     // consider using joseph form if we go indefinite
-    Eigen::Matrix<float, 9, 1> res = K*(z_t - z_hat_t);
+    Eigen::Matrix<double, 9, 1> res = K*(z_t - z_hat_t);
     mu.dned += res.block<3,1>(0, 0);
     mu.dvb += res.block<3,1>(3, 0);
     mu.dtheta += res.block<3,1>(6, 0);
@@ -121,14 +138,16 @@ namespace mav_MUKF
     NState dstate;
     dstate.ned = mu.dned;
     dstate.vb = mu.dvb;
-    dstate.Rbv = quat_exp(Eigen::Quaternionf(0., mu.dtheta(0), mu.dtheta(1),
-          mu.dtheta(2)));
+    dstate.Rbv = quat_exp(mu.dtheta);
 
-    //mav_n_state = mav_n_state + dstate;
-    mu = EState();
-    ROS_WARN_STREAM(mu.dned);
+    mav_n_state = mav_n_state + dstate;
+    mu.dned = Eigen::Vector3d::Zero();
+    mu.dvb = Eigen::Vector3d::Zero();
+    mu.dtheta = Eigen::Vector3d::Zero();
+    mu.dRbv = Eigen::Quaterniond::Identity();
 
     resample = true;
+    initd = true;
   }
 
   void MavMUKF::sample_SigmaX()
@@ -138,8 +157,8 @@ namespace mav_MUKF
       return;
     }
 
-    Eigen::LLT<Eigen::Matrix<float,9,9>> Chol(P_err);
-    Eigen::Matrix<float,9,9> Sigma = Chol.matrixL();
+    Eigen::LLT<Eigen::Matrix<double,9,9>> Chol(P_err);
+    Eigen::Matrix<double,9,9> Sigma = Chol.matrixL();
 
     e_states.clear();
     e_states.push_back(mu);
@@ -147,23 +166,21 @@ namespace mav_MUKF
     for (int i = 0; i<=8; i++)
     {
       // addition sigma
-      EState ep;
+      EState ep({});
       ep.dned = mu.dned + gamma*Sigma.block<3,1>(0,i);
       ep.dvb = mu.dvb + gamma*Sigma.block<3,1>(3,i);
       ep.dtheta = mu.dtheta + gamma*Sigma.block<3,1>(6,i);
-      ep.dRbv = quat_exp(Eigen::Quaternionf(0, ep.dtheta(0), ep.dtheta(1),
-            ep.dtheta(2)));
+      ep.dRbv = quat_exp(ep.dtheta);
       ep.w_m = 1/(2*(n + lamb));
       ep.w_c = 1/(2*(n + lamb));
       e_states.push_back(ep);
 
       //// subtraction sigma
-      EState em;
+      EState em({});
       em.dned = mu.dned - gamma*Sigma.block<3,1>(0,i);
       em.dvb = mu.dvb - gamma*Sigma.block<3,1>(3,i);
       em.dtheta = mu.dtheta - gamma*Sigma.block<3,1>(6,i);
-      em.dRbv = quat_exp(Eigen::Quaternionf(0, em.dtheta(0), em.dtheta(1),
-            em.dtheta(2)));
+      em.dRbv = quat_exp(em.dtheta);
       em.w_m = 1/(2*(n + lamb));
       em.w_c = 1/(2*(n + lamb));
       e_states.push_back(em);
@@ -171,14 +188,19 @@ namespace mav_MUKF
     resample = false;
   }
 
-  Eigen::Quaternionf MavMUKF::quat_exp(Eigen::Quaternionf q)
+  Eigen::Quaterniond MavMUKF::quat_exp(Eigen::Vector3d th)
   {
-    Eigen::Vector3f q_v;
-    q_v << q.x(), q.y(), q.z();
-    Eigen::Vector3f q_vexp;
-    q_vexp << std::exp(q.w())*q_v.normalized()*std::sin(q_v.norm());
-    Eigen::Quaternionf qexp(std::exp(q.w())*std::cos(q_v.norm()),
-        q_vexp(0), q_vexp(1), q_vexp(2));
+    float eps = 1e-16;
+    if (th.norm() < eps)
+    {
+      return Eigen::Quaterniond::Identity();
+    }
+    Eigen::Vector3d th_n = th.normalized();
+    double cos_nth = std::cos(th.norm()/2.);
+    double sin_nth = std::sin(th.norm()/2.);
+    Eigen::Quaterniond qexp(cos_nth,
+        sin_nth*th_n(0), sin_nth*th_n(1), sin_nth*th_n(2));
+    return qexp;
   }
 
   void MavMUKF::imu_lpf_cb_(const sensor_msgs::ImuConstPtr& msg)
@@ -187,9 +209,9 @@ namespace mav_MUKF
     acc << msg->linear_acceleration.x, msg->linear_acceleration.y, msg->linear_acceleration.z;
   }
 
-  void MavMUKF::f_nstate(float dt)
+  void MavMUKF::f_nstate(double dt)
   {
-    float N = 10;
+    double N = 10;
     // 10 step euler integration
     // Note since we are using the quaternion exponential, this only needs to be
     // done once for the quaternion
@@ -197,12 +219,12 @@ namespace mav_MUKF
     {
       return;
     }
-    Eigen::Vector3f omega_n = gyro.normalized();
-    float cos_nomega = std::cos(gyro.norm()*dt/N/2.);
-    float sin_nomega = std::sin(gyro.norm()*dt/N/2.);
-    Eigen::Quaternionf exp_omega(cos_nomega, sin_nomega*omega_n(0), 
+    Eigen::Vector3d omega_n = gyro.normalized();
+    double cos_nomega = std::cos(gyro.norm()*dt/N/2.);
+    double sin_nomega = std::sin(gyro.norm()*dt/N/2.);
+    Eigen::Quaterniond exp_omega(cos_nomega, sin_nomega*omega_n(0), 
         sin_nomega*omega_n(1), sin_nomega*omega_n(2));
-    Eigen::Vector3f grav; grav << 0., 0., p_.g;
+    Eigen::Vector3d grav; grav << 0., 0., p_.g;
     for (int i = 0; i < N; i++)
     {
       NState dstate;
@@ -215,10 +237,10 @@ namespace mav_MUKF
     mav_n_state.Rbv = mav_n_state.Rbv.normalized();
   }
 
-  void MavMUKF::f_estate(float dt)
+  void MavMUKF::f_estate(double dt)
   {
-    Eigen::Vector3f g;
-    g << 0.0, 0.0, -9.8;
+    Eigen::Vector3d g;
+    g << 0.0, 0.0, 9.8;
 
     for(auto&& chi: e_states)
     {
@@ -228,21 +250,20 @@ namespace mav_MUKF
             mav_n_state.Rbv*mav_n_state.vb)*dt/10.;
         chi.dvb += (chi.dvb.cross(gyro) + (mav_n_state.Rbv*chi.dRbv).inverse()*g -
                     mav_n_state.Rbv.inverse()*g)*dt/10.;
-        chi.dtheta += (gyro.cross(chi.dtheta))*dt/10.;
+        chi.dtheta += -(gyro.cross(chi.dtheta))*dt/10.;
       }
-      chi.dRbv = quat_exp(Eigen::Quaternionf(0., chi.dtheta(0),
-            chi.dtheta(1), chi.dtheta(2)));
+      chi.dRbv = quat_exp(chi.dtheta);
     }
     /*
      * Calculate the mean and covariance
      */
 
     // this will be moved into the callback eventually... maybe
-    mu.dned = Eigen::Vector3f::Zero();
-    mu.dvb = Eigen::Vector3f::Zero();
-    mu.dtheta = Eigen::Vector3f::Zero();
-    mu.dRbv = Eigen::Quaternionf::Identity();
-    P_err = Eigen::Matrix<float, 9, 9>::Zero();
+    mu.dned = Eigen::Vector3d::Zero();
+    mu.dvb = Eigen::Vector3d::Zero();
+    mu.dtheta = Eigen::Vector3d::Zero();
+    mu.dRbv = Eigen::Quaterniond::Identity();
+    Eigen::Matrix<double, 9, 9> P_temp = Eigen::Matrix<double, 9, 9>::Zero();
     // calculate mean
     for(auto&& chi: e_states)
     {
@@ -255,20 +276,23 @@ namespace mav_MUKF
     {
       EState d;
       d = chi - mu;
-      P_err += chi.w_c*(d.vstate())*(d.vstate().transpose());
+      P_temp += chi.w_c*(d.vstate())*(d.vstate().transpose());
     }
-    P_err += Q_err;
+    P_err = P_temp + Q_err;
 
-    mu.dRbv = quat_exp(Eigen::Quaternionf(0., mu.dtheta(0),
-          mu.dtheta(1), mu.dtheta(2)));
+    mu.dRbv = quat_exp(mu.dtheta);
 
-    // need to think about whether I really need to resample here
+    resample = true;
+    sample_SigmaX();
   }
 
   void MavMUKF::tick()
   {
+    if (!initd)
+      return;
+    
     // predict forward everything!!!!!!
-    float dt = (ros::Time::now() - now).toSec();
+    double dt = (ros::Time::now() - now).toSec();
     now = ros::Time::now();
 
     // Nominal State
@@ -301,7 +325,7 @@ namespace mav_MUKF
     msg_vb.vector.z = mav_n_state.vb(2);
     v_est_pub_.publish(msg_vb);
 
-    Eigen::Vector3f v_w = mav_n_state.Rbv*mav_n_state.vb;
+    Eigen::Vector3d v_w = mav_n_state.Rbv*mav_n_state.vb;
     std_msgs::Float32 msg_chi;
     msg_chi.data = std::atan2(v_w(1), v_w(0));
     chi_est_pub_.publish(msg_chi);
