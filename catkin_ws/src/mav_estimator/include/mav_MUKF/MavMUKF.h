@@ -57,7 +57,7 @@ struct EState{
     Eigen::Vector3d dvb;
     Eigen::Vector3d dtheta;
     Eigen::Quaterniond dRbv;
-    Eigen::Matrix<double, 7, 1> Z;
+    Eigen::Matrix<double, 8, 1> Z;
     double w_m;
     double w_c;
 
@@ -154,7 +154,7 @@ class MavMUKF
   int n;
   EState mu;
   Eigen::Matrix<double, 9, 9> Q_err;
-  Eigen::Matrix<double, 7, 7> R_err;
+  Eigen::Matrix<double, 8, 8> R_err;
   Eigen::Matrix<double, 9, 9> P_err;
 
   // mav params
@@ -167,6 +167,8 @@ class MavMUKF
   void sample_SigmaX();
 
   std::vector<EState> e_states;
+
+  Eigen::Vector3d QuatToEuler(Eigen::Quaterniond q);
 
   Eigen::Quaterniond quat_exp(Eigen::Vector3d q);
 

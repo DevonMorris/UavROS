@@ -35,10 +35,9 @@ namespace mav_MUKF
     // variances position
     P_err(0,0) = 2; P_err(1,1) = 2; P_err(2,2) = 2;
     P_err(3,3) = 1; P_err(4,4) = 1; P_err(5,5) = 1;
-    P_err(8,8) = .001; P_err(8,8) = .001; P_err(8,8) = .005; 
-    Q_err = .01*Eigen::Matrix<double, 9, 9>::Identity();
-    R_err = .001*Eigen::Matrix<double, 7, 7>::Identity();
-    R_err(3,3) = .001;
+    P_err(8,8) = .05; P_err(8,8) = .05; P_err(8,8) = .05; 
+    Q_err = .1*Eigen::Matrix<double, 9, 9>::Identity();
+    R_err = .01*Eigen::Matrix<double, 8, 8>::Identity();
     resample = true;
     mu = EState({});
     mav_n_state = NState({});
@@ -51,7 +50,7 @@ namespace mav_MUKF
     n = 9;
     alpha = 1.0;
     beta = 2;
-    kappa = 0;
+    kappa = .1;
     lamb = std::pow(alpha, 2)*(n + kappa) - n;
     mu.w_m  = lamb/(n + lamb);
     mu.w_c  = lamb/(n + lamb) + (1 - std::pow(alpha,2) + beta);
@@ -61,6 +60,17 @@ namespace mav_MUKF
   /*
    * Callbacks
    */
+
+  Eigen::Vector3d MavMUKF::QuatToEuler(Eigen::Quaterniond q)
+  {
+    Eigen::Vector3d euler;
+    euler(0) = std::atan2(2*(q.w()*q.x() + q.y()*q.z()), 1 - 2*(std::pow(q.x(),2) + 
+          std::pow(q.y(),2)));
+    euler(1) = std::asin(2*(q.w()*q.y() - q.z()*q.x()));
+    euler(2) = std::atan2(2*(q.w()*q.z() + q.x()*q.y()), 1 - 2*(std::pow(q.y(),2) +
+          std::pow(q.z(),2)));
+    return euler;
+  }
 
   void MavMUKF::h_lpf_cb_(const std_msgs::Float32ConstPtr& msg)
   {
@@ -90,34 +100,35 @@ namespace mav_MUKF
     double dt_gps = (ros::Time::now() - now_gps).toSec();
     now_gps = ros::Time::now();
 
-    std::vector<Eigen::Matrix<double, 7, 1>> measurements;
+    std::vector<Eigen::Matrix<double, 8, 1>> measurements;
 
     Eigen::Vector3d vw_gps;
     vw_gps << msg->vector.x, msg->vector.y, -msg->vector.z;
     vw_gps = (vw_gps - prev_gps)/dt_gps;
     prev_gps << msg->vector.x, msg->vector.y, -msg->vector.z;
+    mav_n_state.vb = mav_n_state.Rbv.inverse()*vw_gps;
 
-    Eigen::Matrix<double, 7, 1> z_t, z_hat_t;
-    z_t << msg->vector.x, msg->vector.y, h_est, vw_gps(0), vw_gps(1), vw_gps(2), chi_lpf;
-    z_hat_t << 0., 0., 0., 0., 0., 0., 0.;
+    Eigen::Matrix<double, 8, 1> z_t, z_hat_t;
+    z_t << msg->vector.x, msg->vector.y, h_est, vw_gps(0), vw_gps(1), vw_gps(2), chi_lpf, Va_est;
+    z_hat_t << 0., 0., 0., 0., 0., 0., 0., 0.;
     
 
     for (auto&& chi: e_states)
     {
-      Eigen::Matrix<double, 7, 1> Z;
+      Eigen::Matrix<double, 8, 1> Z;
       double vg = (mav_n_state.vb + chi.dvb).norm();
       Eigen::Vector3d vw = (mav_n_state.Rbv*chi.dRbv)*(mav_n_state.vb + chi.dvb);
       double psi = std::atan2(vw(1), vw(0));
       Z << chi.dned(0) + mav_n_state.ned(0), chi.dned(1) + mav_n_state.ned(1),
-        - mav_n_state.ned(2) - chi.dned(2), vw(0), vw(1), vw(2), psi;
+        - mav_n_state.ned(2) - chi.dned(2), vw(0), vw(1), vw(2), psi, mav_n_state.vb(0);
       chi.Z = Z;
       z_hat_t += chi.w_m*Z;
     }
 
-    Eigen::Matrix<double, 7, 7> S_t;
-    Eigen::Matrix<double, 9, 7> P_xz;
-    S_t = Eigen::Matrix<double, 7, 7>::Zero();
-    P_xz = Eigen::Matrix<double, 9, 7>::Zero();
+    Eigen::Matrix<double, 8, 8> S_t;
+    Eigen::Matrix<double, 9, 8> P_xz;
+    S_t = Eigen::Matrix<double, 8, 8>::Zero();
+    P_xz = Eigen::Matrix<double, 9, 8>::Zero();
 
     for (auto&& chi: e_states)
     {
@@ -126,7 +137,7 @@ namespace mav_MUKF
     }
 
     S_t += R_err;
-    Eigen::Matrix<double, 9, 7> K = P_xz*S_t.inverse();
+    Eigen::Matrix<double, 9, 8> K = P_xz*S_t.inverse();
 
     // consider using joseph form if we go indefinite
     Eigen::Matrix<double, 9, 1> res = K*(z_t - z_hat_t);
@@ -211,7 +222,7 @@ namespace mav_MUKF
 
   void MavMUKF::f_nstate(double dt)
   {
-    double N = 10;
+    double N = 5.;
     // 10 step euler integration
     // Note since we are using the quaternion exponential, this only needs to be
     // done once for the quaternion
@@ -220,8 +231,8 @@ namespace mav_MUKF
       return;
     }
     Eigen::Vector3d omega_n = gyro.normalized();
-    double cos_nomega = std::cos(gyro.norm()*dt/N/2.);
-    double sin_nomega = std::sin(gyro.norm()*dt/N/2.);
+    double cos_nomega = std::cos(gyro.norm()*(dt/N)/2.);
+    double sin_nomega = std::sin(gyro.norm()*(dt/N)/2.);
     Eigen::Quaterniond exp_omega(cos_nomega, sin_nomega*omega_n(0), 
         sin_nomega*omega_n(1), sin_nomega*omega_n(2));
     Eigen::Vector3d grav; grav << 0., 0., p_.g;
@@ -302,13 +313,13 @@ namespace mav_MUKF
     sample_SigmaX();
     f_estate(dt);
 
-    auto euler = mav_n_state.Rbv.toRotationMatrix().eulerAngles(2, 1, 0);
+    auto euler = QuatToEuler(mav_n_state.Rbv);
 
     geometry_msgs::Vector3Stamped msg_euler;
     msg_euler.header.stamp = now;
-    msg_euler.vector.x = euler(2);
+    msg_euler.vector.x = euler(0);
     msg_euler.vector.y = euler(1);
-    msg_euler.vector.z = euler(0);
+    msg_euler.vector.z = euler(2);
     euler_est_pub_.publish(msg_euler);
 
     geometry_msgs::Vector3Stamped msg_ned;
